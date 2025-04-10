@@ -83,13 +83,6 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
     setOpen(false);
   };
   
-  // Add a direct click handler for CommandItem to ensure event propagation
-  const handleCommandItemClick = (itemId: string, e: React.MouseEvent) => {
-    console.log("ItemSelector - Direct click handler called for item:", itemId);
-    e.preventDefault(); // Prevent any default behavior
-    handleItemSelection(itemId);
-  };
-  
   const handleCreateNewItem = () => {
     navigate("/items/new");
   };
@@ -135,8 +128,10 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
                 <CommandItem
                   key={item.id}
                   value={item.id}
-                  onSelect={handleItemSelection}
-                  onClick={(e) => handleCommandItemClick(item.id, e)}
+                  onSelect={(currentValue) => {
+                    console.log("ItemSelector - onSelect called with value:", currentValue);
+                    handleItemSelection(currentValue);
+                  }}
                   className="cursor-pointer"
                 >
                   <div className="flex flex-col">
