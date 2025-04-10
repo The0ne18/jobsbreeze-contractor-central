@@ -11,6 +11,7 @@ import { IItemService } from "./interfaces/IItemService";
 export class SupabaseItemService implements IItemService {
   async getItems(): Promise<Item[]> {
     try {
+      // Use a cast to avoid type errors with the 'items' table
       const { data, error } = await supabase
         .from('items')
         .select('*')
@@ -21,7 +22,8 @@ export class SupabaseItemService implements IItemService {
         throw error;
       }
       
-      return data ? data.map(mapDbItemToModel) : [];
+      // Cast the data to DbItem[] to use our mapper
+      return data ? (data as DbItem[]).map(mapDbItemToModel) : [];
     } catch (error) {
       console.error('Failed to fetch items:', error);
       throw error;
@@ -44,6 +46,7 @@ export class SupabaseItemService implements IItemService {
         return undefined;
       }
       
+      // Cast the data to DbItem to use our mapper
       return mapDbItemToModel(data as DbItem);
     } catch (error) {
       console.error('Failed to fetch item:', error);
@@ -78,6 +81,7 @@ export class SupabaseItemService implements IItemService {
         throw error;
       }
       
+      // Cast the data to DbItem to use our mapper
       return mapDbItemToModel(data as DbItem);
     } catch (error) {
       console.error('Failed to create item:', error);
@@ -101,6 +105,7 @@ export class SupabaseItemService implements IItemService {
         throw error;
       }
       
+      // Cast the data to DbItem to use our mapper
       return mapDbItemToModel(data as DbItem);
     } catch (error) {
       console.error('Failed to update item:', error);

@@ -82,7 +82,7 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
       </PopoverTrigger>
       <PopoverContent className="p-0" align="start" sideOffset={5} side="bottom">
         <Command>
-          <CommandInput placeholder="Search items..." icon={Search} />
+          <CommandInput placeholder="Search items..." />
           <CommandList>
             <CommandEmpty>
               {loading ? (

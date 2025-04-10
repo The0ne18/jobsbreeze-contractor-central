@@ -26,6 +26,11 @@ export function useEstimateItems(initialTaxRate: number = 0) {
     setItems([...items, newItem]);
   };
 
+  // Add an item from the catalog
+  const addItemFromCatalog = (item: EstimateItem) => {
+    setItems([...items, item]);
+  };
+
   // Remove an item from the estimate
   const removeItem = (id: string) => {
     const updatedItems = items.filter(item => item.id !== id);
@@ -73,6 +78,7 @@ export function useEstimateItems(initialTaxRate: number = 0) {
     items,
     totals,
     addItem,
+    addItemFromCatalog,
     removeItem,
     updateItem,
     updateTaxRate,

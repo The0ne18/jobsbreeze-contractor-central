@@ -65,6 +65,7 @@ export default function EstimateForm({ estimate, onSubmit, onCancel }: EstimateF
     updateItem, 
     updateTaxRate,
     setItems,
+    addItemFromCatalog
   } = useEstimateItems(form.getValues().taxRate);
 
   useEffect(() => {
@@ -138,7 +139,8 @@ export default function EstimateForm({ estimate, onSubmit, onCancel }: EstimateF
             items={items} 
             onAddItem={addItem} 
             onUpdateItem={updateItem} 
-            onRemoveItem={removeItem} 
+            onRemoveItem={removeItem}
+            onAddItemFromCatalog={addItemFromCatalog}
           />
           <EstimateSummary 
             form={form} 

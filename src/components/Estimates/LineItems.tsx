@@ -10,10 +10,26 @@ interface LineItemsProps {
   onAddItem: () => void;
   onUpdateItem: (id: string, field: keyof EstimateItem, value: any) => void;
   onRemoveItem: (id: string) => void;
-  onAddItemFromCatalog: (item: EstimateItem) => void;
+  onAddItemFromCatalog?: (item: EstimateItem) => void; // Make this prop optional
 }
 
-export function LineItems({ items, onAddItem, onUpdateItem, onRemoveItem, onAddItemFromCatalog }: LineItemsProps) {
+export function LineItems({ 
+  items, 
+  onAddItem, 
+  onUpdateItem, 
+  onRemoveItem, 
+  onAddItemFromCatalog 
+}: LineItemsProps) {
+  // Create a handler that uses the provided function or falls back to adding a blank item
+  const handleItemSelected = (item: EstimateItem) => {
+    if (onAddItemFromCatalog) {
+      onAddItemFromCatalog(item);
+    } else {
+      // Fallback to using the regular add item if no catalog function provided
+      onAddItem();
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -29,7 +45,7 @@ export function LineItems({ items, onAddItem, onUpdateItem, onRemoveItem, onAddI
           <div className="text-center py-4 text-muted-foreground">
             No items added. Add a blank item or select from your catalog.
           </div>
-          <ItemSelector onItemSelected={onAddItemFromCatalog} />
+          <ItemSelector onItemSelected={handleItemSelected} />
         </div>
       ) : (
         <div className="space-y-4">
@@ -55,7 +71,7 @@ export function LineItems({ items, onAddItem, onUpdateItem, onRemoveItem, onAddI
           
           {/* Add item from catalog */}
           <div className="pt-2">
-            <ItemSelector onItemSelected={onAddItemFromCatalog} />
+            <ItemSelector onItemSelected={handleItemSelected} />
           </div>
         </div>
       )}
