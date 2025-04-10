@@ -1,9 +1,24 @@
 
+  // Add this console log as the first line inside the function
+  console.log("LineItems rendered with props:", { 
+    itemsCount: items.length, 
+    hasAddItemFromCatalog: !!onAddItemFromCatalog 
+  });
+  
+  // Handle item selection from the catalog
+  const handleItemSelected = (item: EstimateItem) => {
+    // Your existing code...
+  };
+  
+
 import { EstimateItem } from "@/models/Estimate";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { LineItemRow } from "./LineItemRow";
 import { ItemSelector } from "@/components/Items/ItemSelector";
+
+// Add this at the top of the file, just after your imports
+console.log("LineItems component loaded");
 
 interface LineItemsProps {
   items: EstimateItem[];
@@ -12,6 +27,13 @@ interface LineItemsProps {
   onRemoveItem: (id: string) => void;
   onAddItemFromCatalog?: (item: EstimateItem) => void; // Optional prop
 }
+
+// In the LineItems function component, add this line at the very beginning
+export function LineItems({ items, onAddItem, onUpdateItem, onRemoveItem, onAddItemFromCatalog }: LineItemsProps) {
+  console.log("LineItems rendered with props:", { 
+    itemsCount: items.length, 
+    hasAddItemFromCatalog: !!onAddItemFromCatalog 
+  });
   
 export function LineItems({ 
   items, 
@@ -20,6 +42,18 @@ export function LineItems({
   onRemoveItem, 
   onAddItemFromCatalog 
 }: LineItemsProps) {
+
+    // Add this console log as the first line inside the function
+  console.log("LineItems rendered with props:", { 
+    itemsCount: items.length, 
+    hasAddItemFromCatalog: !!onAddItemFromCatalog 
+  });
+  
+  // Handle item selection from the catalog
+  const handleItemSelected = (item: EstimateItem) => {
+    // Your existing code...
+  };
+  
   
   // Handle item selection from the catalog
   const handleItemSelected = (item: EstimateItem) => {
