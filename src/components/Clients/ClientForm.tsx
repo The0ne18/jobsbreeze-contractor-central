@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { Client, NewClient } from "@/models/Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,12 +23,15 @@ interface ClientFormProps {
 }
 
 export default function ClientForm({ isOpen, onClose, onSave, client }: ClientFormProps) {
+  const { user } = useAuth();
+  
   const [formData, setFormData] = useState<NewClient>({
     name: client?.name || "",
     email: client?.email || "",
     phone: client?.phone || "",
     address: client?.address || "",
-    notes: client?.notes || ""
+    notes: client?.notes || "",
+    user_id: user?.id || ""
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -71,9 +75,13 @@ export default function ClientForm({ isOpen, onClose, onSave, client }: ClientFo
     e.preventDefault();
     
     if (validate()) {
-      onSave(formData);
-      toast.success(`Client ${client ? "updated" : "created"} successfully`);
-      onClose();
+      // Make sure the user_id is set correctly
+      const clientData = {
+        ...formData,
+        user_id: user?.id || ""
+      };
+      
+      onSave(clientData);
     }
   };
 

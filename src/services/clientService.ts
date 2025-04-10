@@ -1,71 +1,106 @@
 
+import { supabase } from "@/integrations/supabase/client";
 import { Client, NewClient } from "@/models/Client";
-import { v4 as uuidv4 } from "uuid";
+import { toast } from "sonner";
 
-// Mock data store
-let clients: Client[] = [
-  {
-    id: "c1",
-    name: "John Smith",
-    email: "john.smith@example.com",
-    phone: "(555) 123-4567",
-    address: "123 Main St, Anytown, CA 90210",
-    notes: "Reliable customer, prefers communication via text",
-    createdAt: new Date(2023, 10, 15)
-  },
-  {
-    id: "c2",
-    name: "Sarah Johnson",
-    email: "sarah.j@example.com",
-    phone: "(555) 987-6543",
-    address: "456 Oak Ave, Somewhere, CA 94103",
-    notes: "Has two rental properties that need regular maintenance",
-    createdAt: new Date(2023, 11, 3)
-  },
-  {
-    id: "c3",
-    name: "Robert Chen",
-    email: "robert.chen@example.com",
-    phone: "(555) 456-7890",
-    address: "789 Pine St, Nowhere, CA 92101",
-    createdAt: new Date(2024, 0, 20)
+export const getClients = async (): Promise<Client[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching clients:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Failed to fetch clients:', error);
+    throw error;
   }
-];
-
-export const getClients = (): Promise<Client[]> => {
-  return Promise.resolve([...clients]);
 };
 
-export const getClient = (id: string): Promise<Client | undefined> => {
-  const client = clients.find(c => c.id === id);
-  return Promise.resolve(client);
-};
-
-export const createClient = (client: NewClient): Promise<Client> => {
-  const newClient: Client = {
-    id: uuidv4(),
-    ...client,
-    createdAt: new Date()
-  };
-  
-  clients.push(newClient);
-  return Promise.resolve(newClient);
-};
-
-export const updateClient = (id: string, updatedClient: Partial<Client>): Promise<Client | null> => {
-  const index = clients.findIndex(c => c.id === id);
-  
-  if (index === -1) {
-    return Promise.resolve(null);
+export const getClient = async (id: string): Promise<Client | undefined> => {
+  try {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      if (error.code !== 'PGRST116') { // PGRST116 is "no rows returned" which we handle by returning undefined
+        console.error('Error fetching client:', error);
+        throw error;
+      }
+      return undefined;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch client:', error);
+    throw error;
   }
-  
-  clients[index] = { ...clients[index], ...updatedClient };
-  return Promise.resolve(clients[index]);
 };
 
-export const deleteClient = (id: string): Promise<boolean> => {
-  const initialLength = clients.length;
-  clients = clients.filter(c => c.id !== id);
-  
-  return Promise.resolve(clients.length < initialLength);
+export const createClient = async (client: NewClient): Promise<Client> => {
+  try {
+    const { data, error } = await supabase
+      .from('clients')
+      .insert([client])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating client:', error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Failed to create client:', error);
+    throw error;
+  }
+};
+
+export const updateClient = async (id: string, updatedClient: Partial<Client>): Promise<Client | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('clients')
+      .update(updatedClient)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating client:', error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Failed to update client:', error);
+    throw error;
+  }
+};
+
+export const deleteClient = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting client:', error);
+      throw error;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to delete client:', error);
+    throw error;
+  }
 };

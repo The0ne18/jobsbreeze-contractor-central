@@ -1,111 +1,149 @@
-
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { 
-  Users, 
-  FileText, 
-  Receipt, 
-  Home, 
-  Settings, 
-  Menu, 
-  X
-} from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/context/AuthContext";
+
+import {
+  Home,
+  Users,
+  FileText,
+  Receipt,
+  Settings,
+  Menu,
+  X,
+  LogOut,
+} from "lucide-react";
 
 const navItems = [
-  { icon: Home, label: "Dashboard", href: "/" },
-  { icon: Users, label: "Clients", href: "/clients" },
-  { icon: FileText, label: "Estimates", href: "/estimates" },
-  { icon: Receipt, label: "Invoices", href: "/invoices" },
-  { icon: Settings, label: "Settings", href: "/settings" },
+  {
+    title: "Dashboard",
+    href: "/",
+    icon: Home,
+  },
+  {
+    title: "Clients",
+    href: "/clients",
+    icon: Users,
+  },
+  {
+    title: "Estimates",
+    href: "/estimates",
+    icon: FileText,
+  },
+  {
+    title: "Invoices",
+    href: "/invoices",
+    icon: Receipt,
+  },
+  {
+    title: "Settings",
+    href: "/settings",
+    icon: Settings,
+  },
 ];
 
 export default function Sidebar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const isMobile = useMobile();
   const location = useLocation();
+  const { signOut, user } = useAuth();
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
+  // Close sidebar on mobile when route changes
+  useEffect(() => {
+    if (isMobile) {
+      setOpen(false);
+    }
+  }, [location.pathname, isMobile]);
+
+  // Keep sidebar open on desktop
+  useEffect(() => {
+    if (!isMobile) {
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  }, [isMobile]);
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
     <>
-      {/* Mobile menu button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-4 left-4 z-50 md:hidden"
-        onClick={toggleSidebar}
-      >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </Button>
+      {/* Mobile Hamburger Menu */}
+      {isMobile && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed left-4 top-3 z-50 md:hidden"
+          onClick={() => setOpen(!open)}
+        >
+          {open ? <X /> : <Menu />}
+          <span className="sr-only">Toggle Menu</span>
+        </Button>
+      )}
 
-      {/* Sidebar */}
-      <div
-        className={cn(
-          "fixed inset-y-0 left-0 z-40 w-64 bg-sidebar transition-transform duration-300 ease-in-out md:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <div className="flex h-full flex-col overflow-y-auto">
-          {/* Logo */}
-          <div className="flex items-center justify-center p-6">
-            <Link to="/" className="flex items-center space-x-2">
-              <img 
-                src="/placeholder.svg" 
-                alt="JobsBreeze Logo" 
-                className="h-8 w-8" 
-              />
-              <span className="text-xl font-bold text-white">JobsBreeze</span>
-            </Link>
-          </div>
-
-          {/* Nav Links */}
-          <nav className="flex-1 space-y-1 px-4 py-4">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.href || 
-                (item.href !== "/" && location.pathname.startsWith(item.href));
-              
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className={cn(
-                    "flex items-center space-x-3 rounded-md px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent",
-                    isActive && "bg-sidebar-primary text-sidebar-primary-foreground"
-                  )}
-                >
-                  <item.icon size={20} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* User info at bottom */}
-          <div className="p-4 border-t border-sidebar-border">
-            <div className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground">
-              <div className="h-8 w-8 rounded-full bg-sidebar-accent flex items-center justify-center">
-                <span className="text-xs font-medium">JB</span>
-              </div>
-              <div>
-                <p className="font-medium">Demo Account</p>
-                <p className="text-xs opacity-70">contractor@example.com</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Backdrop for mobile */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 z-30 bg-black/50 md:hidden" 
-          onClick={toggleSidebar}
+      {/* Sidebar Background Overlay */}
+      {isMobile && open && (
+        <div
+          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm"
+          onClick={() => setOpen(false)}
         />
       )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-jobs-blue-dark p-4 text-white transition-transform md:static md:translate-x-0",
+          open ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex flex-col gap-6 h-full">
+          {/* Logo */}
+          <div className="flex items-center gap-2 px-2">
+            <span className="text-xl font-bold">JobsBreeze</span>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 space-y-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+                  location.pathname === item.href
+                    ? "bg-white/10 text-white"
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                {item.title}
+              </Link>
+            ))}
+          </nav>
+
+          {/* User and Sign Out */}
+          <div className="mt-auto space-y-2 border-t border-white/10 pt-4">
+            <div className="px-3 py-2 text-xs text-white/70">
+              Signed in as:
+              <div className="font-medium text-sm truncate text-white">
+                {user?.email}
+              </div>
+            </div>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-white/70 hover:bg-white/10 hover:text-white px-3"
+              onClick={handleSignOut}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
+        </div>
+      </aside>
     </>
   );
 }

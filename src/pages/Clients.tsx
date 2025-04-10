@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout/Layout";
 import ClientList from "@/components/Clients/ClientList";
 import ClientForm from "@/components/Clients/ClientForm";
@@ -64,12 +63,15 @@ export default function Clients() {
         const updated = await updateClient(currentClient.id, clientData);
         if (updated) {
           setClients(clients.map(c => c.id === currentClient.id ? updated : c));
+          toast.success("Client updated successfully");
         }
       } else {
         // Create new client
         const newClient = await createClient(clientData);
-        setClients([...clients, newClient]);
+        setClients([newClient, ...clients]);
+        toast.success("Client created successfully");
       }
+      setFormOpen(false);
     } catch (error) {
       console.error("Error saving client:", error);
       toast.error("Failed to save client");

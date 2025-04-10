@@ -6,7 +6,9 @@ export interface Client {
   phone: string;
   address: string;
   notes?: string;
-  createdAt: Date;
+  user_id: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface NewClient {
@@ -15,4 +17,5 @@ export interface NewClient {
   phone: string;
   address: string;
   notes?: string;
+  user_id: string;
 }
