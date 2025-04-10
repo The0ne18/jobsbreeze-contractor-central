@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
 
 import {
@@ -46,18 +46,16 @@ const navItems = [
 
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const location = useLocation();
   const { signOut, user } = useAuth();
 
-  // Close sidebar on mobile when route changes
   useEffect(() => {
     if (isMobile) {
       setOpen(false);
     }
   }, [location.pathname, isMobile]);
 
-  // Keep sidebar open on desktop
   useEffect(() => {
     if (!isMobile) {
       setOpen(true);
@@ -72,7 +70,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile Hamburger Menu */}
       {isMobile && (
         <Button
           variant="ghost"
@@ -85,7 +82,6 @@ export default function Sidebar() {
         </Button>
       )}
 
-      {/* Sidebar Background Overlay */}
       {isMobile && open && (
         <div
           className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm"
@@ -93,7 +89,6 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-jobs-blue-dark p-4 text-white transition-transform md:static md:translate-x-0",
@@ -101,12 +96,10 @@ export default function Sidebar() {
         )}
       >
         <div className="flex flex-col gap-6 h-full">
-          {/* Logo */}
           <div className="flex items-center gap-2 px-2">
             <span className="text-xl font-bold">JobsBreeze</span>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 space-y-1">
             {navItems.map((item) => (
               <Link
@@ -125,7 +118,6 @@ export default function Sidebar() {
             ))}
           </nav>
 
-          {/* User and Sign Out */}
           <div className="mt-auto space-y-2 border-t border-white/10 pt-4">
             <div className="px-3 py-2 text-xs text-white/70">
               Signed in as:

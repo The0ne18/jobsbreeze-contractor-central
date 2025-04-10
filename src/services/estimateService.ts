@@ -91,6 +91,7 @@ export const createEstimate = async (estimate: NewEstimate): Promise<Estimate> =
       total: estimate.total,
       notes: estimate.notes,
       terms: estimate.terms,
+      user_id: supabase.auth.getUser().then(({ data }) => data.user?.id) || '',
     };
     
     // 4. Insert the estimate
@@ -103,6 +104,10 @@ export const createEstimate = async (estimate: NewEstimate): Promise<Estimate> =
     if (error) {
       console.error('Error creating estimate:', error);
       throw error;
+    }
+    
+    if (!newEstimate) {
+      throw new Error('Failed to create estimate: No data returned');
     }
     
     if (estimate.items.length > 0) {
@@ -217,10 +222,14 @@ export const updateEstimate = async (id: string, updatedEstimate: Partial<Estima
       throw itemsError;
     }
     
-    return {
-      ...data,
-      items: items || [],
-    };
+    if (data) {
+      return {
+        ...data,
+        items: items || [],
+      };
+    }
+    
+    return null;
   } catch (error) {
     console.error('Failed to update estimate:', error);
     throw error;
