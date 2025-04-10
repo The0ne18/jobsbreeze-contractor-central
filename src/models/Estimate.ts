@@ -28,6 +28,7 @@ export interface Estimate {
 
 export interface NewEstimate {
   clientId: string;
+  clientName: string; // Added this property to match what's used in the form
   date: Date;
   expirationDate: Date;
   items: EstimateItem[];

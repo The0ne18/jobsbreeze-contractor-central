@@ -35,7 +35,17 @@ export const createEstimate = (estimate: NewEstimate): Promise<Estimate> => {
   const newEstimate: Estimate = {
     id: uuidv4(),
     status: "draft",
-    ...estimate,
+    clientId: estimate.clientId,
+    clientName: estimate.clientName, // Now correctly using the property from NewEstimate
+    date: estimate.date,
+    expirationDate: estimate.expirationDate,
+    items: estimate.items,
+    subtotal: estimate.subtotal,
+    taxRate: estimate.taxRate,
+    taxAmount: estimate.taxAmount,
+    total: estimate.total,
+    notes: estimate.notes,
+    terms: estimate.terms,
     createdAt: new Date()
   };
   
