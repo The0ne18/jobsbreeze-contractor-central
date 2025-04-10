@@ -59,13 +59,9 @@ export default function ClientForm({ isOpen, onClose, onSave, client }: ClientFo
       newErrors.email = "Invalid email format";
     }
     
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    }
+    // Removed phone validation check
     
-    if (!formData.address.trim()) {
-      newErrors.address = "Address is required";
-    }
+    // Removed address validation check
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -119,7 +115,7 @@ export default function ClientForm({ isOpen, onClose, onSave, client }: ClientFo
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
+            <Label htmlFor="phone">Phone (optional)</Label>
             <Input
               id="phone"
               name="phone"
@@ -131,7 +127,7 @@ export default function ClientForm({ isOpen, onClose, onSave, client }: ClientFo
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
+            <Label htmlFor="address">Address (optional)</Label>
             <Input
               id="address"
               name="address"
