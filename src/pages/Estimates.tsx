@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FilePlus, Search, Download, FileText, PenLine } from "lucide-react";
 import { format } from "date-fns";
 import Layout from "@/components/Layout/Layout";
@@ -9,28 +9,70 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-
-// Mock data for demonstration
-const mockEstimates = [
-  {
-    id: "1",
-    number: "#1",
-    date: new Date(2025, 3, 7), // April 7th, 2025
-    clientName: "Client Name",
-    total: 0,
-    status: "draft"
-  }
-];
+import NewEstimateSheet from "@/components/Estimates/NewEstimateSheet";
+import { Estimate } from "@/models/Estimate";
+import { getEstimates } from "@/services/estimateService";
 
 export default function Estimates() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
+  const [estimates, setEstimates] = useState<Estimate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [newEstimateOpen, setNewEstimateOpen] = useState(false);
   
-  // Filter estimates based on active tab
-  const filteredEstimates = mockEstimates.filter(estimate => {
-    if (activeTab === "pending") return estimate.status !== "approved" && estimate.status !== "declined";
-    return estimate.status === activeTab;
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Load estimates data
+  useEffect(() => {
+    fetchEstimates();
+  }, []);
+  
+  // Check if we should open the new estimate form
+  useEffect(() => {
+    if (location.pathname === "/estimates/new") {
+      setNewEstimateOpen(true);
+    }
+  }, [location.pathname]);
+  
+  const fetchEstimates = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getEstimates();
+      setEstimates(data);
+    } catch (error) {
+      console.error("Failed to fetch estimates:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Filter estimates based on active tab and search query
+  const filteredEstimates = estimates.filter(estimate => {
+    const matchesTab = 
+      (activeTab === "pending" && estimate.status !== "approved" && estimate.status !== "declined") ||
+      estimate.status === activeTab;
+    
+    const matchesSearch = 
+      searchQuery === "" || 
+      estimate.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      estimate.id.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesTab && matchesSearch;
   });
+  
+  // Handle new estimate sheet open/close
+  const handleNewEstimateOpenChange = (open: boolean) => {
+    setNewEstimateOpen(open);
+    if (!open && location.pathname === "/estimates/new") {
+      navigate("/estimates");
+    }
+  };
+  
+  // Handle "New Estimate" button click
+  const handleNewEstimateClick = () => {
+    navigate("/estimates/new");
+  };
 
   return (
     <Layout title="Estimates" className="px-0 sm:px-6">
@@ -58,11 +100,9 @@ export default function Estimates() {
                 PRO
               </Badge>
             </Button>
-            <Button asChild className="gap-2">
-              <Link to="/estimates/new">
-                <FilePlus className="h-4 w-4" />
-                New Estimate
-              </Link>
+            <Button className="gap-2" onClick={handleNewEstimateClick}>
+              <FilePlus className="h-4 w-4" />
+              New Estimate
             </Button>
           </div>
         </div>
@@ -107,21 +147,36 @@ export default function Estimates() {
 
         {/* Tab content for all statuses */}
         <TabsContent value="pending" className="mt-0 rounded-none border-none p-0">
-          {renderEstimatesList(filteredEstimates)}
+          {renderEstimatesList(filteredEstimates, isLoading, handleNewEstimateClick)}
         </TabsContent>
         <TabsContent value="approved" className="mt-0 rounded-none border-none p-0">
-          {renderEstimatesList(filteredEstimates)}
+          {renderEstimatesList(filteredEstimates, isLoading, handleNewEstimateClick)}
         </TabsContent>
         <TabsContent value="declined" className="mt-0 rounded-none border-none p-0">
-          {renderEstimatesList(filteredEstimates)}
+          {renderEstimatesList(filteredEstimates, isLoading, handleNewEstimateClick)}
         </TabsContent>
       </Tabs>
+
+      {/* New Estimate Sheet */}
+      <NewEstimateSheet 
+        open={newEstimateOpen} 
+        onOpenChange={handleNewEstimateOpenChange}
+        onEstimateCreated={fetchEstimates}
+      />
     </Layout>
   );
 }
 
 // Helper function to render the estimates list
-function renderEstimatesList(estimates: any[]) {
+function renderEstimatesList(estimates: Estimate[], isLoading: boolean, onNewEstimateClick: () => void) {
+  if (isLoading) {
+    return (
+      <div className="flex justify-center p-8">
+        <div className="text-center">Loading estimates...</div>
+      </div>
+    );
+  }
+
   if (estimates.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center">
@@ -136,20 +191,18 @@ function renderEstimatesList(estimates: any[]) {
             Create your first estimate to start tracking your business proposals and convert them to invoices.
           </p>
         </div>
-        <Button asChild className="mt-4">
-          <Link to="/estimates/new">
-            <FilePlus className="mr-2 h-4 w-4" />
-            Create New Estimate
-          </Link>
+        <Button className="mt-4" onClick={onNewEstimateClick}>
+          <FilePlus className="mr-2 h-4 w-4" />
+          Create New Estimate
         </Button>
       </div>
     );
   }
 
   // Group estimates by month
-  const estimatesByMonth: Record<string, any[]> = {};
+  const estimatesByMonth: Record<string, Estimate[]> = {};
   estimates.forEach(estimate => {
-    const monthYear = format(estimate.date, "MMMM yyyy");
+    const monthYear = format(new Date(estimate.date), "MMMM yyyy");
     if (!estimatesByMonth[monthYear]) {
       estimatesByMonth[monthYear] = [];
     }
@@ -173,13 +226,16 @@ function renderEstimatesList(estimates: any[]) {
                 <div className="flex justify-between items-center">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{estimate.number}</span>
+                      <span className="font-medium">#{estimate.id}</span>
                       <Badge variant="outline" className="bg-gray-100 text-gray-600 font-medium uppercase text-xs">
                         {estimate.status}
                       </Badge>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {format(estimate.date, "MMMM do yyyy")}
+                      {format(new Date(estimate.date), "MMMM do yyyy")}
+                    </div>
+                    <div className="text-sm font-medium mt-1">
+                      {estimate.clientName}
                     </div>
                   </div>
                   

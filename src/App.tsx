@@ -22,13 +22,12 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/clients" element={<Clients />} />
-          <Route path="/estimates" element={<Estimates />} />
-          <Route path="/invoices" element={<Invoices />} />
-          <Route path="/settings" element={<Settings />} />
-          {/* Additional routes for creating and editing */}
           <Route path="/clients/new" element={<Clients />} />
+          <Route path="/estimates" element={<Estimates />} />
           <Route path="/estimates/new" element={<Estimates />} />
+          <Route path="/invoices" element={<Invoices />} />
           <Route path="/invoices/new" element={<Invoices />} />
+          <Route path="/settings" element={<Settings />} />
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
