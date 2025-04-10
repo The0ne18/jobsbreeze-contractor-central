@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Client, NewClient } from "@/models/Client";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,21 @@ export default function ClientForm({ isOpen, onClose, onSave, client }: ClientFo
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Reset form data when the dialog opens or client prop changes
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        name: client?.name || "",
+        email: client?.email || "",
+        phone: client?.phone || "",
+        address: client?.address || "",
+        notes: client?.notes || "",
+        user_id: user?.id || ""
+      });
+      setErrors({});
+    }
+  }, [isOpen, client, user?.id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
