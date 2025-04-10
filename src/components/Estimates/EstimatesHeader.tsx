@@ -1,8 +1,7 @@
 
-import { Search, Download, FileText, FilePlus } from "lucide-react";
+import { Search, Download, FilePlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 interface EstimatesHeaderProps {
   searchQuery: string;
@@ -31,13 +30,6 @@ export function EstimatesHeader({
           <Button variant="outline" className="gap-2">
             <Download className="h-4 w-4" />
             Export
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <FileText className="h-4 w-4" />
-            <span>Use Template</span>
-            <Badge variant="outline" className="ml-1 rounded-sm bg-primary/20 px-1 text-xs font-semibold uppercase text-primary">
-              PRO
-            </Badge>
           </Button>
           <Button className="gap-2" onClick={onNewEstimateClick}>
             <FilePlus className="h-4 w-4" />
