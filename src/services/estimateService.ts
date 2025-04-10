@@ -3,6 +3,51 @@ import { supabase } from "@/integrations/supabase/client";
 import { Estimate, EstimateItem, NewEstimate } from "@/models/Estimate";
 import { generateEstimateNumber } from "@/utils/estimateUtils";
 
+// Helper function to convert database estimate to our model
+const mapDbEstimateToModel = (dbEstimate: any, items: any[] = []): Estimate => {
+  return {
+    id: dbEstimate.id,
+    clientId: dbEstimate.client_id,
+    clientName: dbEstimate.client_name,
+    status: dbEstimate.status,
+    date: dbEstimate.date,
+    expirationDate: dbEstimate.expiration_date,
+    items: items.map(item => mapDbEstimateItemToModel(item)),
+    subtotal: dbEstimate.subtotal,
+    taxRate: dbEstimate.tax_rate,
+    taxAmount: dbEstimate.tax_amount,
+    total: dbEstimate.total,
+    notes: dbEstimate.notes || '',
+    terms: dbEstimate.terms || '',
+    createdAt: dbEstimate.created_at,
+    user_id: dbEstimate.user_id,
+    
+    // Include the original database fields for direct access if needed
+    client_id: dbEstimate.client_id,
+    client_name: dbEstimate.client_name,
+    expiration_date: dbEstimate.expiration_date,
+    tax_rate: dbEstimate.tax_rate,
+    tax_amount: dbEstimate.tax_amount,
+    created_at: dbEstimate.created_at,
+    updated_at: dbEstimate.updated_at
+  };
+};
+
+// Helper function to convert database estimate item to our model
+const mapDbEstimateItemToModel = (dbItem: any): EstimateItem => {
+  return {
+    id: dbItem.id,
+    description: dbItem.description,
+    quantity: dbItem.quantity,
+    rate: dbItem.rate,
+    tax: dbItem.tax,
+    total: dbItem.total,
+    category: dbItem.category as 'labor' | 'materials' | 'other',
+    estimate_id: dbItem.estimate_id,
+    created_at: dbItem.created_at
+  };
+};
+
 export const getEstimates = async (): Promise<Estimate[]> => {
   try {
     const { data, error } = await supabase
@@ -15,7 +60,29 @@ export const getEstimates = async (): Promise<Estimate[]> => {
       throw error;
     }
     
-    return data || [];
+    // Get all estimate items
+    const { data: allItems, error: itemsError } = await supabase
+      .from('estimate_items')
+      .select('*');
+    
+    if (itemsError) {
+      console.error('Error fetching estimate items:', itemsError);
+      throw itemsError;
+    }
+    
+    // Group items by estimate_id
+    const itemsByEstimateId: Record<string, any[]> = {};
+    if (allItems) {
+      allItems.forEach(item => {
+        if (!itemsByEstimateId[item.estimate_id]) {
+          itemsByEstimateId[item.estimate_id] = [];
+        }
+        itemsByEstimateId[item.estimate_id].push(item);
+      });
+    }
+    
+    // Map DB estimates to model estimates with their items
+    return data ? data.map(est => mapDbEstimateToModel(est, itemsByEstimateId[est.id] || [])) : [];
   } catch (error) {
     console.error('Failed to fetch estimates:', error);
     throw error;
@@ -49,10 +116,7 @@ export const getEstimate = async (id: string): Promise<Estimate | undefined> => 
       throw itemsError;
     }
     
-    return {
-      ...data,
-      items: items || [],
-    };
+    return mapDbEstimateToModel(data, items || []);
   } catch (error) {
     console.error('Failed to fetch estimate:', error);
     throw error;
@@ -75,7 +139,14 @@ export const createEstimate = async (estimate: NewEstimate): Promise<Estimate> =
     }
     
     // 2. Generate estimate number
-    const estimateNumber = generateEstimateNumber(estimate.clientName, existingEstimates || []);
+    const estimateNumber = generateEstimateNumber(
+      estimate.clientName, 
+      existingEstimates ? existingEstimates.map(e => ({ id: e.id, clientName: e.client_name })) : []
+    );
+    
+    // Get current user id
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id || '';
     
     // 3. Prepare estimate data
     const estimateData = {
@@ -83,21 +154,21 @@ export const createEstimate = async (estimate: NewEstimate): Promise<Estimate> =
       client_id: estimate.clientId,
       client_name: estimate.clientName,
       status: 'draft',
-      date: estimate.date,
-      expiration_date: estimate.expirationDate,
+      date: estimate.date.toISOString().split('T')[0],
+      expiration_date: estimate.expirationDate.toISOString().split('T')[0],
       subtotal: estimate.subtotal,
       tax_rate: estimate.taxRate,
       tax_amount: estimate.taxAmount,
       total: estimate.total,
       notes: estimate.notes,
       terms: estimate.terms,
-      user_id: supabase.auth.getUser().then(({ data }) => data.user?.id) || '',
+      user_id: userId,
     };
     
     // 4. Insert the estimate
     const { data: newEstimate, error } = await supabase
       .from('estimates')
-      .insert([estimateData])
+      .insert(estimateData)
       .select()
       .single();
     
@@ -134,10 +205,7 @@ export const createEstimate = async (estimate: NewEstimate): Promise<Estimate> =
     }
     
     // 7. Return the created estimate with items
-    return {
-      ...newEstimate,
-      items: estimate.items,
-    };
+    return mapDbEstimateToModel(newEstimate, estimate.items);
   } catch (error) {
     console.error('Failed to create estimate:', error);
     throw error;
@@ -153,8 +221,22 @@ export const updateEstimate = async (id: string, updatedEstimate: Partial<Estima
     if (updatedEstimate.clientId) estimateData.client_id = updatedEstimate.clientId;
     if (updatedEstimate.clientName) estimateData.client_name = updatedEstimate.clientName;
     if (updatedEstimate.status) estimateData.status = updatedEstimate.status;
-    if (updatedEstimate.date) estimateData.date = updatedEstimate.date;
-    if (updatedEstimate.expirationDate) estimateData.expiration_date = updatedEstimate.expirationDate;
+    if (updatedEstimate.date) {
+      // Convert Date to ISO string for database
+      if (updatedEstimate.date instanceof Date) {
+        estimateData.date = updatedEstimate.date.toISOString().split('T')[0];
+      } else {
+        estimateData.date = updatedEstimate.date;
+      }
+    }
+    if (updatedEstimate.expirationDate) {
+      // Convert Date to ISO string for database
+      if (updatedEstimate.expirationDate instanceof Date) {
+        estimateData.expiration_date = updatedEstimate.expirationDate.toISOString().split('T')[0];
+      } else {
+        estimateData.expiration_date = updatedEstimate.expirationDate;
+      }
+    }
     if (updatedEstimate.subtotal !== undefined) estimateData.subtotal = updatedEstimate.subtotal;
     if (updatedEstimate.taxRate !== undefined) estimateData.tax_rate = updatedEstimate.taxRate;
     if (updatedEstimate.taxAmount !== undefined) estimateData.tax_amount = updatedEstimate.taxAmount;
@@ -223,10 +305,7 @@ export const updateEstimate = async (id: string, updatedEstimate: Partial<Estima
     }
     
     if (data) {
-      return {
-        ...data,
-        items: items || [],
-      };
+      return mapDbEstimateToModel(data, items || []);
     }
     
     return null;

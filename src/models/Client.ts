@@ -7,8 +7,8 @@ export interface Client {
   address: string;
   notes?: string;
   user_id: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string | Date;
+  updated_at: string | Date;
 }
 
 export interface NewClient {
