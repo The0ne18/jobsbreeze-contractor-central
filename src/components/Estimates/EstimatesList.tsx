@@ -1,4 +1,3 @@
-
 import React from "react";
 import { format } from "date-fns";
 import { Estimate } from "@/models/Estimate";
@@ -10,7 +9,8 @@ import {
   PaginationItem, 
   PaginationLink, 
   PaginationNext, 
-  PaginationPrevious 
+  PaginationPrevious,
+  PaginationEllipsis 
 } from "@/components/ui/pagination";
 import { Loader2 } from "lucide-react";
 
@@ -57,30 +57,24 @@ export function EstimatesList({
     estimatesByMonth[monthYear].push(estimate);
   });
 
-  // Calculate pagination
   const itemsPerPage = 10;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  // Generate page numbers to display
   const getPageNumbers = () => {
     const pages = [];
     
-    // Always show first page
     pages.push(1);
     
-    // Show current page and pages around it
     for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
       if (!pages.includes(i)) {
         pages.push(i);
       }
     }
     
-    // Always show last page if there is more than one page
     if (totalPages > 1 && !pages.includes(totalPages)) {
       pages.push(totalPages);
     }
     
-    // Sort pages in ascending order
     return pages.sort((a, b) => a - b);
   };
 
@@ -116,7 +110,6 @@ export function EstimatesList({
             )}
             
             {pageNumbers.map((page, index) => {
-              // Add ellipsis if there's a gap in page numbers
               const prevPage = pageNumbers[index - 1];
               const showEllipsisBefore = prevPage && page - prevPage > 1;
               
@@ -124,7 +117,7 @@ export function EstimatesList({
                 <React.Fragment key={page}>
                   {showEllipsisBefore && (
                     <PaginationItem>
-                      <span className="flex h-9 w-9 items-center justify-center">...</span>
+                      <PaginationEllipsis />
                     </PaginationItem>
                   )}
                   <PaginationItem>

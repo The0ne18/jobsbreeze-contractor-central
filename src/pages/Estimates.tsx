@@ -1,18 +1,12 @@
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout/Layout";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-import NewEstimateSheet from "@/components/Estimates/NewEstimateSheet";
 import { Estimate } from "@/models/Estimate";
-import { getEstimates } from "@/services/estimateService";
 import { EstimatesHeader } from "@/components/Estimates/EstimatesHeader";
-import { EstimatesList } from "@/components/Estimates/EstimatesList";
-import { ViewEstimateDialog } from "@/components/Estimates/ViewEstimateDialog";
-import { EditEstimateSheet } from "@/components/Estimates/EditEstimateSheet";
-import { Progress } from "@/components/ui/progress";
+import { EstimateTabs } from "@/components/Estimates/EstimateTabs";
+import { EstimateDialogs } from "@/components/Estimates/EstimateDialogs";
+import { useEstimatesData } from "@/hooks/useEstimatesData";
 
 export default function Estimates() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,17 +28,8 @@ export default function Estimates() {
     status: activeTab !== "pending" ? activeTab : undefined
   };
   
-  // Use React Query to fetch and cache estimates
-  const { 
-    data, 
-    isLoading, 
-    refetch 
-  } = useQuery({
-    queryKey: ['estimates', queryOptions],
-    queryFn: () => getEstimates(queryOptions),
-    staleTime: 60000, // Data is fresh for 1 minute
-    placeholderData: { data: [], total: 0 } // Provide placeholder data to avoid type errors
-  });
+  // Use custom hook to fetch and cache estimates
+  const { data, isLoading, refetch } = useEstimatesData(queryOptions);
   
   const estimates = data?.data || [];
   const totalEstimates = data?.total || 0;
@@ -85,6 +70,11 @@ export default function Estimates() {
     setCurrentPage(page);
   };
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setCurrentPage(1); // Reset page when changing tabs
+  };
+
   return (
     <Layout title="Estimates" className="px-0 sm:px-6">
       <EstimatesHeader 
@@ -93,110 +83,29 @@ export default function Estimates() {
         onNewEstimateClick={handleNewEstimateClick}
       />
 
-      <Tabs 
-        defaultValue="pending" 
-        value={activeTab} 
-        onValueChange={(value) => {
-          setActiveTab(value);
-          setCurrentPage(1); // Reset page when changing tabs
-        }}
-        className="w-full"
-      >
-        <TabsList className="grid w-full grid-cols-3 rounded-none border-b bg-transparent p-0">
-          <TabsTrigger 
-            value="pending" 
-            className={cn(
-              "rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none",
-              activeTab === "pending" ? "font-semibold text-primary" : "text-muted-foreground"
-            )}
-          >
-            PENDING
-          </TabsTrigger>
-          <TabsTrigger 
-            value="approved" 
-            className={cn(
-              "rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none",
-              activeTab === "approved" ? "font-semibold text-primary" : "text-muted-foreground"
-            )}
-          >
-            APPROVED
-          </TabsTrigger>
-          <TabsTrigger 
-            value="declined" 
-            className={cn(
-              "rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none",
-              activeTab === "declined" ? "font-semibold text-primary" : "text-muted-foreground"
-            )}
-          >
-            DECLINED
-          </TabsTrigger>
-        </TabsList>
-
-        {isLoading && (
-          <div className="py-4 px-4">
-            <Progress value={50} className="h-1" />
-          </div>
-        )}
-
-        <TabsContent value="pending" className="mt-0 rounded-none border-none p-0">
-          <EstimatesList 
-            estimates={estimates} 
-            isLoading={isLoading} 
-            onNewEstimateClick={handleNewEstimateClick}
-            onOpenEstimate={handleOpenEstimate}
-            onEditEstimate={handleEditEstimate}
-            totalItems={totalEstimates}
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-          />
-        </TabsContent>
-        <TabsContent value="approved" className="mt-0 rounded-none border-none p-0">
-          <EstimatesList 
-            estimates={estimates} 
-            isLoading={isLoading} 
-            onNewEstimateClick={handleNewEstimateClick}
-            onOpenEstimate={handleOpenEstimate}
-            onEditEstimate={handleEditEstimate}
-            totalItems={totalEstimates}
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-          />
-        </TabsContent>
-        <TabsContent value="declined" className="mt-0 rounded-none border-none p-0">
-          <EstimatesList 
-            estimates={estimates} 
-            isLoading={isLoading} 
-            onNewEstimateClick={handleNewEstimateClick}
-            onOpenEstimate={handleOpenEstimate}
-            onEditEstimate={handleEditEstimate}
-            totalItems={totalEstimates}
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-          />
-        </TabsContent>
-      </Tabs>
-
-      <NewEstimateSheet 
-        open={newEstimateOpen} 
-        onOpenChange={handleNewEstimateOpenChange}
-        onEstimateCreated={refetch}
+      <EstimateTabs
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        estimates={estimates}
+        isLoading={isLoading}
+        onNewEstimateClick={handleNewEstimateClick}
+        onOpenEstimate={handleOpenEstimate}
+        onEditEstimate={handleEditEstimate}
+        totalEstimates={totalEstimates}
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
       />
 
-      <ViewEstimateDialog
-        open={viewDialogOpen}
-        onOpenChange={setViewDialogOpen}
-        estimateId={selectedEstimateId}
-        onEdit={(estimate) => {
-          setViewDialogOpen(false);
-          handleEditEstimate(estimate);
-        }}
-      />
-
-      <EditEstimateSheet
-        open={editSheetOpen}
-        onOpenChange={setEditSheetOpen}
-        estimateId={selectedEstimateId}
-        onEstimateUpdated={refetch}
+      <EstimateDialogs
+        newEstimateOpen={newEstimateOpen}
+        setNewEstimateOpen={handleNewEstimateOpenChange}
+        viewDialogOpen={viewDialogOpen}
+        setViewDialogOpen={setViewDialogOpen}
+        editSheetOpen={editSheetOpen}
+        setEditSheetOpen={setEditSheetOpen}
+        selectedEstimateId={selectedEstimateId}
+        onEstimateCreatedOrUpdated={refetch}
+        onEditEstimate={handleEditEstimate}
       />
     </Layout>
   );
