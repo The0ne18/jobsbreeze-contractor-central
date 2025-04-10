@@ -9,6 +9,8 @@ import { Estimate } from "@/models/Estimate";
 import { getEstimates } from "@/services/estimateService";
 import { EstimatesHeader } from "@/components/Estimates/EstimatesHeader";
 import { EstimatesList } from "@/components/Estimates/EstimatesList";
+import { ViewEstimateDialog } from "@/components/Estimates/ViewEstimateDialog";
+import { EditEstimateSheet } from "@/components/Estimates/EditEstimateSheet";
 
 export default function Estimates() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,6 +18,9 @@ export default function Estimates() {
   const [estimates, setEstimates] = useState<Estimate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newEstimateOpen, setNewEstimateOpen] = useState(false);
+  const [selectedEstimateId, setSelectedEstimateId] = useState<string | undefined>(undefined);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -70,6 +75,16 @@ export default function Estimates() {
     setSearchQuery(query);
   };
 
+  const handleOpenEstimate = (estimate: Estimate) => {
+    setSelectedEstimateId(estimate.id);
+    setViewDialogOpen(true);
+  };
+
+  const handleEditEstimate = (estimate: Estimate) => {
+    setSelectedEstimateId(estimate.id);
+    setEditSheetOpen(true);
+  };
+
   return (
     <Layout title="Estimates" className="px-0 sm:px-6">
       <EstimatesHeader 
@@ -118,21 +133,27 @@ export default function Estimates() {
           <EstimatesList 
             estimates={filteredEstimates} 
             isLoading={isLoading} 
-            onNewEstimateClick={handleNewEstimateClick} 
+            onNewEstimateClick={handleNewEstimateClick}
+            onOpenEstimate={handleOpenEstimate}
+            onEditEstimate={handleEditEstimate}
           />
         </TabsContent>
         <TabsContent value="approved" className="mt-0 rounded-none border-none p-0">
           <EstimatesList 
             estimates={filteredEstimates} 
             isLoading={isLoading} 
-            onNewEstimateClick={handleNewEstimateClick} 
+            onNewEstimateClick={handleNewEstimateClick}
+            onOpenEstimate={handleOpenEstimate}
+            onEditEstimate={handleEditEstimate}
           />
         </TabsContent>
         <TabsContent value="declined" className="mt-0 rounded-none border-none p-0">
           <EstimatesList 
             estimates={filteredEstimates} 
             isLoading={isLoading} 
-            onNewEstimateClick={handleNewEstimateClick} 
+            onNewEstimateClick={handleNewEstimateClick}
+            onOpenEstimate={handleOpenEstimate}
+            onEditEstimate={handleEditEstimate}
           />
         </TabsContent>
       </Tabs>
@@ -141,6 +162,23 @@ export default function Estimates() {
         open={newEstimateOpen} 
         onOpenChange={handleNewEstimateOpenChange}
         onEstimateCreated={fetchEstimates}
+      />
+
+      <ViewEstimateDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        estimateId={selectedEstimateId}
+        onEdit={(estimate) => {
+          setViewDialogOpen(false);
+          handleEditEstimate(estimate);
+        }}
+      />
+
+      <EditEstimateSheet
+        open={editSheetOpen}
+        onOpenChange={setEditSheetOpen}
+        estimateId={selectedEstimateId}
+        onEstimateUpdated={fetchEstimates}
       />
     </Layout>
   );

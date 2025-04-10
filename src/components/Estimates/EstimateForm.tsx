@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,7 +7,7 @@ import { X } from "lucide-react";
 
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { NewEstimate } from "@/models/Estimate";
+import { Estimate, NewEstimate } from "@/models/Estimate";
 import { Client } from "@/models/Client";
 import { getClients } from "@/services/clientService";
 
@@ -31,23 +32,29 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface EstimateFormProps {
+  estimate?: Estimate;
   onSubmit: (data: NewEstimate) => void;
   onCancel: () => void;
 }
 
-export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) {
+export default function EstimateForm({ estimate, onSubmit, onCancel }: EstimateFormProps) {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   
+  const defaultValues: Partial<FormValues> = {
+    date: estimate ? new Date(estimate.date) : new Date(),
+    expirationDate: estimate 
+      ? new Date(estimate.expirationDate) 
+      : new Date(new Date().setDate(new Date().getDate() + 30)),
+    taxRate: estimate ? estimate.taxRate : 0,
+    notes: estimate ? estimate.notes : "",
+    terms: estimate ? estimate.terms : "Net 30",
+    clientId: estimate ? estimate.clientId : "",
+  };
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      date: new Date(),
-      expirationDate: new Date(new Date().setDate(new Date().getDate() + 30)),
-      taxRate: 0,
-      notes: "",
-      terms: "Net 30",
-    },
+    defaultValues,
   });
 
   const { 
@@ -56,7 +63,8 @@ export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) 
     addItem, 
     removeItem, 
     updateItem, 
-    updateTaxRate 
+    updateTaxRate,
+    setItems,
   } = useEstimateItems(form.getValues().taxRate);
 
   useEffect(() => {
@@ -73,6 +81,23 @@ export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) 
 
     fetchClients();
   }, []);
+
+  // Initialize form with existing estimate data if editing
+  useEffect(() => {
+    if (estimate) {
+      form.reset({
+        clientId: estimate.clientId,
+        date: new Date(estimate.date),
+        expirationDate: new Date(estimate.expirationDate),
+        taxRate: estimate.taxRate,
+        notes: estimate.notes,
+        terms: estimate.terms,
+      });
+      
+      setItems(estimate.items);
+      updateTaxRate(estimate.taxRate);
+    }
+  }, [estimate, form, setItems, updateTaxRate]);
 
   const handleSubmit = (values: FormValues) => {
     const { clientId, date, expirationDate, taxRate, notes, terms } = values;
@@ -98,7 +123,7 @@ export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">New Estimate</h2>
+        <h2 className="text-xl font-semibold">{estimate ? 'Edit Estimate' : 'New Estimate'}</h2>
         <Button variant="ghost" size="icon" onClick={onCancel}>
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>

@@ -7,9 +7,11 @@ import { Estimate } from "@/models/Estimate";
 
 interface EstimateListItemProps {
   estimate: Estimate;
+  onOpen?: (estimate: Estimate) => void;
+  onEdit?: (estimate: Estimate) => void;
 }
 
-export function EstimateListItem({ estimate }: EstimateListItemProps) {
+export function EstimateListItem({ estimate, onOpen, onEdit }: EstimateListItemProps) {
   return (
     <div className="border-t py-4 px-4">
       <div className="flex justify-between items-center">
@@ -33,10 +35,20 @@ export function EstimateListItem({ estimate }: EstimateListItemProps) {
             ${estimate.total.toFixed(2)}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="rounded-full">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="rounded-full"
+              onClick={() => onOpen && onOpen(estimate)}
+            >
               Open
             </Button>
-            <Button variant="outline" size="sm" className="rounded-full">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="rounded-full"
+              onClick={() => onEdit && onEdit(estimate)}
+            >
               <PenLine className="h-4 w-4" />
               <span className="ml-1">Edit</span>
             </Button>

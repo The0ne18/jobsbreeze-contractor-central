@@ -64,12 +64,18 @@ export function useEstimateItems(initialTaxRate: number = 0) {
     updateTotals(items, taxRate);
   };
 
+  // Effect to recalculate totals when items change
+  useEffect(() => {
+    updateTotals(items, initialTaxRate);
+  }, [items, initialTaxRate]);
+
   return {
     items,
     totals,
     addItem,
     removeItem,
     updateItem,
-    updateTaxRate
+    updateTaxRate,
+    setItems
   };
 }

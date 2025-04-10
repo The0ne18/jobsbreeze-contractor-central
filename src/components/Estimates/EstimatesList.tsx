@@ -8,9 +8,17 @@ interface EstimatesListProps {
   estimates: Estimate[];
   isLoading: boolean;
   onNewEstimateClick: () => void;
+  onOpenEstimate?: (estimate: Estimate) => void;
+  onEditEstimate?: (estimate: Estimate) => void;
 }
 
-export function EstimatesList({ estimates, isLoading, onNewEstimateClick }: EstimatesListProps) {
+export function EstimatesList({ 
+  estimates, 
+  isLoading, 
+  onNewEstimateClick,
+  onOpenEstimate,
+  onEditEstimate
+}: EstimatesListProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center p-8">
@@ -38,7 +46,9 @@ export function EstimatesList({ estimates, isLoading, onNewEstimateClick }: Esti
         <EstimateMonthGroup 
           key={monthYear} 
           monthYear={monthYear} 
-          estimates={monthEstimates} 
+          estimates={monthEstimates}
+          onOpen={onOpenEstimate}
+          onEdit={onEditEstimate}
         />
       ))}
     </div>

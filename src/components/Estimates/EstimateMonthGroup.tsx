@@ -5,9 +5,16 @@ import { EstimateListItem } from "./EstimateListItem";
 interface EstimateMonthGroupProps {
   monthYear: string;
   estimates: Estimate[];
+  onOpen?: (estimate: Estimate) => void;
+  onEdit?: (estimate: Estimate) => void;
 }
 
-export function EstimateMonthGroup({ monthYear, estimates }: EstimateMonthGroupProps) {
+export function EstimateMonthGroup({ 
+  monthYear, 
+  estimates, 
+  onOpen, 
+  onEdit 
+}: EstimateMonthGroupProps) {
   return (
     <div className="py-4">
       <div className="flex justify-between items-center px-4 py-2">
@@ -21,7 +28,12 @@ export function EstimateMonthGroup({ monthYear, estimates }: EstimateMonthGroupP
       
       <div className="space-y-1 mt-2">
         {estimates.map(estimate => (
-          <EstimateListItem key={estimate.id} estimate={estimate} />
+          <EstimateListItem 
+            key={estimate.id} 
+            estimate={estimate} 
+            onOpen={onOpen}
+            onEdit={onEdit}
+          />
         ))}
       </div>
     </div>
