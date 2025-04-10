@@ -5,8 +5,6 @@ import { PlusCircle } from "lucide-react";
 import { LineItemRow } from "./LineItemRow";
 import { ItemSelector } from "@/components/Items/ItemSelector";
 
-
-
 interface LineItemsProps {
   items: EstimateItem[];
   onAddItem: () => void;
@@ -14,7 +12,6 @@ interface LineItemsProps {
   onRemoveItem: (id: string) => void;
   onAddItemFromCatalog?: (item: EstimateItem) => void; // Optional prop
 }
-
   
 export function LineItems({ 
   items, 
