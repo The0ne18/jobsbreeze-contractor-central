@@ -139,9 +139,28 @@ export const createEstimate = async (estimate: NewEstimate): Promise<Estimate> =
     }
     
     // 2. Generate estimate number
+    // Fix the type error by creating properly formatted Estimate-like objects
+    const estimatesForNumberGen = existingEstimates ? existingEstimates.map(e => ({
+      id: e.id,
+      clientName: e.client_name,
+      // Add minimal required properties to satisfy the Estimate type
+      clientId: '',
+      status: 'draft' as const,
+      date: new Date(),
+      expirationDate: new Date(),
+      items: [],
+      subtotal: 0,
+      taxRate: 0,
+      taxAmount: 0,
+      total: 0,
+      notes: '',
+      terms: '',
+      createdAt: new Date()
+    })) : [];
+    
     const estimateNumber = generateEstimateNumber(
       estimate.clientName, 
-      existingEstimates ? existingEstimates.map(e => ({ id: e.id, clientName: e.client_name })) : []
+      estimatesForNumberGen
     );
     
     // Get current user id
