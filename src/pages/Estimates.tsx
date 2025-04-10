@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FilePlus, Search, Download, FileText, PenLine } from "lucide-react";
@@ -23,12 +22,10 @@ export default function Estimates() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Load estimates data
   useEffect(() => {
     fetchEstimates();
   }, []);
   
-  // Check if we should open the new estimate form
   useEffect(() => {
     if (location.pathname === "/estimates/new") {
       setNewEstimateOpen(true);
@@ -47,7 +44,6 @@ export default function Estimates() {
     }
   };
   
-  // Filter estimates based on active tab and search query
   const filteredEstimates = estimates.filter(estimate => {
     const matchesTab = 
       (activeTab === "pending" && estimate.status !== "approved" && estimate.status !== "declined") ||
@@ -61,7 +57,6 @@ export default function Estimates() {
     return matchesTab && matchesSearch;
   });
   
-  // Handle new estimate sheet open/close
   const handleNewEstimateOpenChange = (open: boolean) => {
     setNewEstimateOpen(open);
     if (!open && location.pathname === "/estimates/new") {
@@ -69,14 +64,12 @@ export default function Estimates() {
     }
   };
   
-  // Handle "New Estimate" button click
   const handleNewEstimateClick = () => {
     navigate("/estimates/new");
   };
 
   return (
     <Layout title="Estimates" className="px-0 sm:px-6">
-      {/* Header with search and actions */}
       <div className="mb-6 px-4 sm:px-0">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative flex-1">
@@ -108,7 +101,6 @@ export default function Estimates() {
         </div>
       </div>
 
-      {/* Status tabs */}
       <Tabs 
         defaultValue="pending" 
         value={activeTab} 
@@ -145,7 +137,6 @@ export default function Estimates() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab content for all statuses */}
         <TabsContent value="pending" className="mt-0 rounded-none border-none p-0">
           {renderEstimatesList(filteredEstimates, isLoading, handleNewEstimateClick)}
         </TabsContent>
@@ -157,7 +148,6 @@ export default function Estimates() {
         </TabsContent>
       </Tabs>
 
-      {/* New Estimate Sheet */}
       <NewEstimateSheet 
         open={newEstimateOpen} 
         onOpenChange={handleNewEstimateOpenChange}
@@ -167,7 +157,6 @@ export default function Estimates() {
   );
 }
 
-// Helper function to render the estimates list
 function renderEstimatesList(estimates: Estimate[], isLoading: boolean, onNewEstimateClick: () => void) {
   if (isLoading) {
     return (
@@ -199,7 +188,6 @@ function renderEstimatesList(estimates: Estimate[], isLoading: boolean, onNewEst
     );
   }
 
-  // Group estimates by month
   const estimatesByMonth: Record<string, Estimate[]> = {};
   estimates.forEach(estimate => {
     const monthYear = format(new Date(estimate.date), "MMMM yyyy");
@@ -226,7 +214,7 @@ function renderEstimatesList(estimates: Estimate[], isLoading: boolean, onNewEst
                 <div className="flex justify-between items-center">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">#{estimate.id}</span>
+                      <span className="font-medium text-primary">#{estimate.id}</span>
                       <Badge variant="outline" className="bg-gray-100 text-gray-600 font-medium uppercase text-xs">
                         {estimate.status}
                       </Badge>
