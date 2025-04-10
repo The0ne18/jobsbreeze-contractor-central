@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { X } from "lucide-react";
 
 import { Form } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { NewEstimate } from "@/models/Estimate";
 import { Client } from "@/models/Client";
 import { getClients } from "@/services/clientService";
 
-// Import refactored components
 import { ClientSelection } from "./ClientSelection";
 import { EstimateDetails } from "./EstimateDetails";
 import { LineItems } from "./LineItems";
@@ -18,7 +19,6 @@ import { FormActions } from "./FormActions";
 import { useEstimateItems } from "@/hooks/useEstimateItems";
 import { TaxRateField } from "./TaxRateField";
 
-// Define the form schema with Zod
 const formSchema = z.object({
   clientId: z.string({ required_error: "Please select a client" }),
   date: z.date({ required_error: "Please select a date" }),
@@ -39,7 +39,6 @@ export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) 
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Initialize the form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -51,7 +50,6 @@ export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) 
     },
   });
 
-  // Use our custom hook for items and totals
   const { 
     items, 
     totals, 
@@ -61,7 +59,6 @@ export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) 
     updateTaxRate 
   } = useEstimateItems(form.getValues().taxRate);
 
-  // Fetch clients when component mounts
   useEffect(() => {
     const fetchClients = async () => {
       try {
@@ -77,7 +74,6 @@ export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) 
     fetchClients();
   }, []);
 
-  // Handle form submission
   const handleSubmit = (values: FormValues) => {
     const { clientId, date, expirationDate, taxRate, notes, terms } = values;
     const clientName = clients.find(c => c.id === clientId)?.name || '';
@@ -111,21 +107,14 @@ export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) 
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          {/* Client Selection */}
           <ClientSelection form={form} clients={clients} loading={loading} />
-
-          {/* Estimate Details */}
           <EstimateDetails form={form} />
-
-          {/* Line Items */}
           <LineItems 
             items={items} 
             onAddItem={addItem} 
             onUpdateItem={updateItem} 
             onRemoveItem={removeItem} 
           />
-
-          {/* Summary and Totals */}
           <EstimateSummary 
             form={form} 
             subtotal={totals.subtotal} 
@@ -139,11 +128,7 @@ export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) 
               />
             }
           />
-
-          {/* Notes and Terms */}
           <AdditionalInformation form={form} />
-
-          {/* Form Actions */}
           <FormActions onCancel={onCancel} />
         </form>
       </Form>
