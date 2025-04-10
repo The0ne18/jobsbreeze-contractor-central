@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { 
   Users, 
   FileText, 
-  FileInvoice, 
+  Receipt, 
   Home, 
   Settings, 
   Menu, 
@@ -17,7 +17,7 @@ const navItems = [
   { icon: Home, label: "Dashboard", href: "/" },
   { icon: Users, label: "Clients", href: "/clients" },
   { icon: FileText, label: "Estimates", href: "/estimates" },
-  { icon: FileInvoice, label: "Invoices", href: "/invoices" },
+  { icon: Receipt, label: "Invoices", href: "/invoices" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];
 

@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, FileInvoice, UserPlus, Users, FileCheck, Clock, DollarSign } from "lucide-react";
+import { FileText, Receipt, UserPlus, Users, FileCheck, Clock, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getClients } from "@/services/clientService";
 import { Client } from "@/models/Client";
@@ -75,7 +74,7 @@ export default function Dashboard() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="text-2xl font-bold">{summaryData.overdueInvoices}</div>
-                <FileInvoice className="h-6 w-6 text-red-500" />
+                <Receipt className="h-6 w-6 text-red-500" />
               </div>
             </CardContent>
           </Card>
@@ -105,7 +104,7 @@ export default function Dashboard() {
             
             <Button asChild className="h-auto p-4 bg-jobs-blue hover:bg-jobs-blue-hover" size="lg">
               <Link to="/invoices/new" className="flex flex-col items-center justify-center">
-                <FileInvoice className="h-8 w-8 mb-2" />
+                <Receipt className="h-8 w-8 mb-2" />
                 <span>New Invoice</span>
               </Link>
             </Button>
