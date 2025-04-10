@@ -1,13 +1,14 @@
 
 import { estimateService as supabaseEstimateService } from "./SupabaseEstimateService";
 import { Estimate, EstimateItem, NewEstimate } from "@/models/Estimate";
+import { GetEstimatesOptions } from "./SupabaseEstimateService";
 
 // This file exists only for backward compatibility
 // It re-exports the actual implementation methods from SupabaseEstimateService
 // so that existing code doesn't break during the transition to the new architecture
 
-export const getEstimates = (): Promise<Estimate[]> => {
-  return supabaseEstimateService.getEstimates();
+export const getEstimates = (options?: GetEstimatesOptions): Promise<{ data: Estimate[], total: number }> => {
+  return supabaseEstimateService.getEstimates(options);
 };
 
 export const getEstimate = (id: string): Promise<Estimate | undefined> => {

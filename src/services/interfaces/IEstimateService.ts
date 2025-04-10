@@ -1,14 +1,15 @@
 
 import { Estimate, EstimateItem, NewEstimate } from "@/models/Estimate";
+import { GetEstimatesOptions } from "@/services/SupabaseEstimateService";
 
 /**
  * Interface for estimate service operations
  */
 export interface IEstimateService {
   /**
-   * Get all estimates
+   * Get all estimates with optional filtering and pagination
    */
-  getEstimates(): Promise<Estimate[]>;
+  getEstimates(options?: GetEstimatesOptions): Promise<{ data: Estimate[], total: number }>;
   
   /**
    * Get a specific estimate by ID

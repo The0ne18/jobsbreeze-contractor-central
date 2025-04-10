@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Estimate, EstimateItem, NewEstimate } from "@/models/Estimate";
 import { DbEstimate, DbEstimateItem } from "@/models/database/DbEstimate";
@@ -11,26 +10,70 @@ import {
 import { IEstimateService } from "./interfaces/IEstimateService";
 import { generateEstimateNumber } from "@/utils/estimateUtils";
 
+export interface GetEstimatesOptions {
+  page?: number;
+  limit?: number;
+  status?: string;
+  searchQuery?: string;
+}
+
 /**
  * Implementation of IEstimateService using Supabase
  */
 export class SupabaseEstimateService implements IEstimateService {
-  async getEstimates(): Promise<Estimate[]> {
+  private cache: Map<string, { data: Estimate, timestamp: number }> = new Map();
+  private CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+  async getEstimates(options: GetEstimatesOptions = {}): Promise<{ data: Estimate[], total: number }> {
     try {
-      const { data, error } = await supabase
+      const { 
+        page = 1, 
+        limit = 10, 
+        status, 
+        searchQuery 
+      } = options;
+      
+      const offset = (page - 1) * limit;
+      
+      // Start building the query
+      let query = supabase
         .from('estimates')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact' });
+      
+      // Apply filters if provided
+      if (status) {
+        query = query.eq('status', status);
+      }
+      
+      if (searchQuery) {
+        query = query.or(`client_name.ilike.%${searchQuery}%,id.ilike.%${searchQuery}%`);
+      }
+      
+      // Apply pagination
+      query = query
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+      
+      // Execute the query
+      const { data, error, count } = await query;
       
       if (error) {
         console.error('Error fetching estimates:', error);
         throw error;
       }
       
-      // Get all estimate items
+      if (!data || !count) {
+        return { data: [], total: 0 };
+      }
+      
+      // Get estimate IDs to fetch items
+      const estimateIds = data.map(est => est.id);
+      
+      // Get items only for these estimates
       const { data: allItems, error: itemsError } = await supabase
         .from('estimate_items')
-        .select('*');
+        .select('*')
+        .in('estimate_id', estimateIds);
       
       if (itemsError) {
         console.error('Error fetching estimate items:', itemsError);
@@ -49,9 +92,14 @@ export class SupabaseEstimateService implements IEstimateService {
       }
       
       // Map DB estimates to model estimates with their items
-      return data ? data.map(est => 
+      const estimates = data.map(est => 
         mapDbEstimateToModel(est as DbEstimate, itemsByEstimateId[est.id] || [])
-      ) : [];
+      );
+      
+      return { 
+        data: estimates, 
+        total: count 
+      };
     } catch (error) {
       console.error('Failed to fetch estimates:', error);
       throw error;
@@ -60,11 +108,31 @@ export class SupabaseEstimateService implements IEstimateService {
 
   async getEstimate(id: string): Promise<Estimate | undefined> {
     try {
-      const { data, error } = await supabase
-        .from('estimates')
-        .select('*')
-        .eq('id', id)
-        .single();
+      // Check cache first
+      const cachedEstimate = this.cache.get(id);
+      if (cachedEstimate && (Date.now() - cachedEstimate.timestamp < this.CACHE_DURATION)) {
+        console.log('Using cached estimate data for ID:', id);
+        return cachedEstimate.data;
+      }
+      
+      // If not in cache, fetch from database
+      const [estimateResult, itemsResult] = await Promise.all([
+        // Get the estimate
+        supabase
+          .from('estimates')
+          .select('*')
+          .eq('id', id)
+          .single(),
+          
+        // Get estimate items in parallel
+        supabase
+          .from('estimate_items')
+          .select('*')
+          .eq('estimate_id', id)
+      ]);
+      
+      const { data: estimate, error } = estimateResult;
+      const { data: items, error: itemsError } = itemsResult;
       
       if (error) {
         if (error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
@@ -74,18 +142,23 @@ export class SupabaseEstimateService implements IEstimateService {
         return undefined;
       }
       
-      // Get estimate items
-      const { data: items, error: itemsError } = await supabase
-        .from('estimate_items')
-        .select('*')
-        .eq('estimate_id', id);
-      
       if (itemsError) {
         console.error('Error fetching estimate items:', itemsError);
         throw itemsError;
       }
       
-      return mapDbEstimateToModel(data as DbEstimate, items as DbEstimateItem[] || []);
+      const mappedEstimate = mapDbEstimateToModel(
+        estimate as DbEstimate, 
+        items as DbEstimateItem[] || []
+      );
+      
+      // Cache the result
+      this.cache.set(id, {
+        data: mappedEstimate,
+        timestamp: Date.now()
+      });
+      
+      return mappedEstimate;
     } catch (error) {
       console.error('Failed to fetch estimate:', error);
       throw error;
@@ -239,6 +312,9 @@ export class SupabaseEstimateService implements IEstimateService {
         throw itemsError;
       }
       
+      // Invalidate cache for this estimate
+      this.cache.delete(id);
+      
       if (data) {
         return mapDbEstimateToModel(data as DbEstimate, items as DbEstimateItem[] || []);
       }
@@ -273,6 +349,9 @@ export class SupabaseEstimateService implements IEstimateService {
         console.error('Error deleting estimate:', error);
         throw error;
       }
+      
+      // Remove from cache if exists
+      this.cache.delete(id);
       
       return true;
     } catch (error) {

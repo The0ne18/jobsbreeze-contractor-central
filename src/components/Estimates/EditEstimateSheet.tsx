@@ -8,6 +8,7 @@ import {
 import EstimateForm from "@/components/Estimates/EstimateForm";
 import { Estimate, NewEstimate } from "@/models/Estimate";
 import { getEstimate, updateEstimate } from "@/services/estimateService";
+import { Loader2 } from "lucide-react";
 
 interface EditEstimateSheetProps {
   open: boolean;
@@ -77,7 +78,8 @@ export function EditEstimateSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-xl md:max-w-2xl lg:max-w-3xl overflow-y-auto">
         {isLoading ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex flex-col items-center justify-center h-full space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p>Loading estimate...</p>
           </div>
         ) : currentEstimate ? (

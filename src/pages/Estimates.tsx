@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout/Layout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -11,12 +12,12 @@ import { EstimatesHeader } from "@/components/Estimates/EstimatesHeader";
 import { EstimatesList } from "@/components/Estimates/EstimatesList";
 import { ViewEstimateDialog } from "@/components/Estimates/ViewEstimateDialog";
 import { EditEstimateSheet } from "@/components/Estimates/EditEstimateSheet";
+import { Progress } from "@/components/ui/progress";
 
 export default function Estimates() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
-  const [estimates, setEstimates] = useState<Estimate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [newEstimateOpen, setNewEstimateOpen] = useState(false);
   const [selectedEstimateId, setSelectedEstimateId] = useState<string | undefined>(undefined);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -24,41 +25,35 @@ export default function Estimates() {
   
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Define query parameters based on active tab and search query
+  const queryOptions = {
+    page: currentPage,
+    limit: 10,
+    searchQuery: searchQuery !== "" ? searchQuery : undefined,
+    status: activeTab !== "pending" ? activeTab : undefined
+  };
   
-  useEffect(() => {
-    fetchEstimates();
-  }, []);
+  // Use React Query to fetch and cache estimates
+  const { 
+    data, 
+    isLoading, 
+    refetch 
+  } = useQuery({
+    queryKey: ['estimates', queryOptions],
+    queryFn: () => getEstimates(queryOptions),
+    staleTime: 60000, // Data is fresh for 1 minute
+    keepPreviousData: true // Keep previous data while loading new data
+  });
+  
+  const estimates = data?.data || [];
+  const totalEstimates = data?.total || 0;
   
   useEffect(() => {
     if (location.pathname === "/estimates/new") {
       setNewEstimateOpen(true);
     }
   }, [location.pathname]);
-  
-  const fetchEstimates = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getEstimates();
-      setEstimates(data);
-    } catch (error) {
-      console.error("Failed to fetch estimates:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const filteredEstimates = estimates.filter(estimate => {
-    const matchesTab = 
-      (activeTab === "pending" && estimate.status !== "approved" && estimate.status !== "declined") ||
-      estimate.status === activeTab;
-    
-    const matchesSearch = 
-      searchQuery === "" || 
-      estimate.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      estimate.id.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return matchesTab && matchesSearch;
-  });
   
   const handleNewEstimateOpenChange = (open: boolean) => {
     setNewEstimateOpen(open);
@@ -73,6 +68,7 @@ export default function Estimates() {
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page on new search
   };
 
   const handleOpenEstimate = (estimate: Estimate) => {
@@ -83,6 +79,10 @@ export default function Estimates() {
   const handleEditEstimate = (estimate: Estimate) => {
     setSelectedEstimateId(estimate.id);
     setEditSheetOpen(true);
+  };
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -96,7 +96,10 @@ export default function Estimates() {
       <Tabs 
         defaultValue="pending" 
         value={activeTab} 
-        onValueChange={setActiveTab}
+        onValueChange={(value) => {
+          setActiveTab(value);
+          setCurrentPage(1); // Reset page when changing tabs
+        }}
         className="w-full"
       >
         <TabsList className="grid w-full grid-cols-3 rounded-none border-b bg-transparent p-0">
@@ -129,31 +132,46 @@ export default function Estimates() {
           </TabsTrigger>
         </TabsList>
 
+        {isLoading && (
+          <div className="py-4 px-4">
+            <Progress value={50} className="h-1" />
+          </div>
+        )}
+
         <TabsContent value="pending" className="mt-0 rounded-none border-none p-0">
           <EstimatesList 
-            estimates={filteredEstimates} 
+            estimates={estimates} 
             isLoading={isLoading} 
             onNewEstimateClick={handleNewEstimateClick}
             onOpenEstimate={handleOpenEstimate}
             onEditEstimate={handleEditEstimate}
+            totalItems={totalEstimates}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
           />
         </TabsContent>
         <TabsContent value="approved" className="mt-0 rounded-none border-none p-0">
           <EstimatesList 
-            estimates={filteredEstimates} 
+            estimates={estimates} 
             isLoading={isLoading} 
             onNewEstimateClick={handleNewEstimateClick}
             onOpenEstimate={handleOpenEstimate}
             onEditEstimate={handleEditEstimate}
+            totalItems={totalEstimates}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
           />
         </TabsContent>
         <TabsContent value="declined" className="mt-0 rounded-none border-none p-0">
           <EstimatesList 
-            estimates={filteredEstimates} 
+            estimates={estimates} 
             isLoading={isLoading} 
             onNewEstimateClick={handleNewEstimateClick}
             onOpenEstimate={handleOpenEstimate}
             onEditEstimate={handleEditEstimate}
+            totalItems={totalEstimates}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
           />
         </TabsContent>
       </Tabs>
@@ -161,7 +179,7 @@ export default function Estimates() {
       <NewEstimateSheet 
         open={newEstimateOpen} 
         onOpenChange={handleNewEstimateOpenChange}
-        onEstimateCreated={fetchEstimates}
+        onEstimateCreated={refetch}
       />
 
       <ViewEstimateDialog
@@ -178,7 +196,7 @@ export default function Estimates() {
         open={editSheetOpen}
         onOpenChange={setEditSheetOpen}
         estimateId={selectedEstimateId}
-        onEstimateUpdated={fetchEstimates}
+        onEstimateUpdated={refetch}
       />
     </Layout>
   );

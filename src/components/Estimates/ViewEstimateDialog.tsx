@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,7 +7,7 @@ import { getEstimate } from "@/services/estimateService";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PenLine } from "lucide-react";
+import { Loader2, PenLine } from "lucide-react";
 
 interface ViewEstimateDialogProps {
   open: boolean;
@@ -58,7 +57,8 @@ export function ViewEstimateDialog({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[625px]">
-          <div className="flex justify-center p-8">
+          <div className="flex flex-col items-center justify-center p-8 space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p>Loading estimate...</p>
           </div>
         </DialogContent>
