@@ -79,8 +79,15 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
     // Call the callback with the properly formatted EstimateItem
     onItemSelected(estimateItem);
     
-    // Close the popover
+    // Close the popover after selection
     setOpen(false);
+  };
+  
+  // Add a direct click handler for CommandItem to ensure event propagation
+  const handleCommandItemClick = (itemId: string, e: React.MouseEvent) => {
+    console.log("ItemSelector - Direct click handler called for item:", itemId);
+    e.preventDefault(); // Prevent any default behavior
+    handleItemSelection(itemId);
   };
   
   const handleCreateNewItem = () => {
@@ -129,6 +136,7 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
                   key={item.id}
                   value={item.id}
                   onSelect={handleItemSelection}
+                  onClick={(e) => handleCommandItemClick(item.id, e)}
                   className="cursor-pointer"
                 >
                   <div className="flex flex-col">

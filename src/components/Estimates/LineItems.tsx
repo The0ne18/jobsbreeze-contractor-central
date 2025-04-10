@@ -31,6 +31,14 @@ export function LineItems({
       return;
     }
     
+    // Double check that the total is calculated correctly
+    const calculatedTotal = item.quantity * item.rate;
+    if (item.total !== calculatedTotal) {
+      console.log(`LineItems - Fixing item total: ${item.total} -> ${calculatedTotal}`);
+      item.total = calculatedTotal;
+    }
+    
+    // Use the specific callback if provided, otherwise fallback to generic add
     if (onAddItemFromCatalog) {
       console.log("LineItems - Using onAddItemFromCatalog callback");
       onAddItemFromCatalog(item);
