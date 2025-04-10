@@ -23,12 +23,14 @@ export function useEstimateItems(initialTaxRate: number = 0) {
       total: 0,
       category: "labor",
     };
-    setItems([...items, newItem]);
+    setItems(prevItems => [...prevItems, newItem]);
   };
 
   // Add an item from the catalog
   const addItemFromCatalog = (item: EstimateItem) => {
-    setItems([...items, item]);
+    console.log("useEstimateItems - adding from catalog:", item);
+    // Use functional update pattern to ensure we're working with latest state
+    setItems(prevItems => [...prevItems, item]);
   };
 
   // Remove an item from the estimate

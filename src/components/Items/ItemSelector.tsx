@@ -51,15 +51,22 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
   }, [open, items.length]);
   
   const handleSelectItem = (item: Item) => {
-    onItemSelected({
+    // Create a proper EstimateItem object from the catalog Item
+    const estimateItem: EstimateItem = {
       id: uuidv4(),
       description: item.name,
       quantity: 1,
       rate: item.rate,
       tax: item.tax,
-      total: item.rate,
-      category: item.category
-    });
+      total: item.rate, // Initial total is just the rate × quantity (1)
+      category: item.category as 'labor' | 'materials' | 'other'
+    };
+    
+    console.log("ItemSelector - selected item:", item);
+    console.log("ItemSelector - created estimateItem:", estimateItem);
+    
+    // Call the callback with the properly formatted EstimateItem
+    onItemSelected(estimateItem);
     setOpen(false);
   };
   

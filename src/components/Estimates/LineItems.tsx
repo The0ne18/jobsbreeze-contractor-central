@@ -22,9 +22,12 @@ export function LineItems({
 }: LineItemsProps) {
   // Create a handler that uses the provided function or falls back to adding a blank item
   const handleItemSelected = (item: EstimateItem) => {
+    console.log("LineItems - item selected:", item);
     if (onAddItemFromCatalog) {
+      console.log("LineItems - using onAddItemFromCatalog");
       onAddItemFromCatalog(item);
     } else {
+      console.log("LineItems - fallback to onAddItem");
       // Fallback to using the regular add item if no catalog function provided
       onAddItem();
     }
