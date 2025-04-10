@@ -1,17 +1,12 @@
-
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save, X } from "lucide-react";
-import { v4 as uuidv4 } from "uuid";
 
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { EstimateItem, NewEstimate } from "@/models/Estimate";
+import { NewEstimate } from "@/models/Estimate";
 import { Client } from "@/models/Client";
 import { getClients } from "@/services/clientService";
-import { calculateEstimateTotals } from "@/services/estimateService";
 
 // Import refactored components
 import { ClientSelection } from "./ClientSelection";
@@ -19,6 +14,9 @@ import { EstimateDetails } from "./EstimateDetails";
 import { LineItems } from "./LineItems";
 import { EstimateSummary } from "./EstimateSummary";
 import { AdditionalInformation } from "./AdditionalInformation";
+import { FormActions } from "./FormActions";
+import { useEstimateItems } from "@/hooks/useEstimateItems";
+import { TaxRateField } from "./TaxRateField";
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -40,13 +38,7 @@ interface EstimateFormProps {
 export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
-  const [items, setItems] = useState<EstimateItem[]>([]);
-  const [totals, setTotals] = useState({
-    subtotal: 0,
-    taxAmount: 0,
-    total: 0
-  });
-
+  
   // Initialize the form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -58,6 +50,16 @@ export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) 
       terms: "Net 30",
     },
   });
+
+  // Use our custom hook for items and totals
+  const { 
+    items, 
+    totals, 
+    addItem, 
+    removeItem, 
+    updateItem, 
+    updateTaxRate 
+  } = useEstimateItems(form.getValues().taxRate);
 
   // Fetch clients when component mounts
   useEffect(() => {
@@ -74,64 +76,6 @@ export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) 
 
     fetchClients();
   }, []);
-
-  // Add a new item to the estimate
-  const addItem = () => {
-    const newItem: EstimateItem = {
-      id: uuidv4(),
-      description: "",
-      quantity: 1,
-      rate: 0,
-      tax: false,
-      total: 0,
-      category: "labor",
-    };
-    setItems([...items, newItem]);
-  };
-
-  // Remove an item from the estimate
-  const removeItem = (id: string) => {
-    const updatedItems = items.filter(item => item.id !== id);
-    setItems(updatedItems);
-    updateTotals(updatedItems, form.getValues().taxRate);
-  };
-
-  // Update an item in the estimate
-  const updateItem = (id: string, field: keyof EstimateItem, value: any) => {
-    const updatedItems = items.map(item => {
-      if (item.id === id) {
-        const updatedItem = { ...item, [field]: value };
-        
-        // Calculate total if quantity or rate changes
-        if (field === 'quantity' || field === 'rate') {
-          updatedItem.total = updatedItem.quantity * updatedItem.rate;
-        }
-        
-        return updatedItem;
-      }
-      return item;
-    });
-    
-    setItems(updatedItems);
-    updateTotals(updatedItems, form.getValues().taxRate);
-  };
-
-  // Update totals when items or tax rate changes
-  const updateTotals = (currentItems: EstimateItem[], taxRate: number) => {
-    const { subtotal, taxAmount, total } = calculateEstimateTotals(currentItems, taxRate);
-    setTotals({ subtotal, taxAmount, total });
-  };
-
-  // Watch tax rate changes to update totals
-  useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === 'taxRate') {
-        updateTotals(items, value.taxRate as number);
-      }
-    });
-    
-    return () => subscription.unsubscribe();
-  }, [form, items]);
 
   // Handle form submission
   const handleSubmit = (values: FormValues) => {
@@ -187,21 +131,20 @@ export default function EstimateForm({ onSubmit, onCancel }: EstimateFormProps) 
             subtotal={totals.subtotal} 
             taxAmount={totals.taxAmount} 
             total={totals.total} 
+            taxRateField={
+              <TaxRateField 
+                form={form} 
+                value={form.getValues().taxRate} 
+                onChange={updateTaxRate} 
+              />
+            }
           />
 
           {/* Notes and Terms */}
           <AdditionalInformation form={form} />
 
           {/* Form Actions */}
-          <div className="flex justify-end gap-4 pt-4">
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-            <Button type="submit">
-              <Save className="mr-2 h-4 w-4" />
-              Save Estimate
-            </Button>
-          </div>
+          <FormActions onCancel={onCancel} />
         </form>
       </Form>
     </div>

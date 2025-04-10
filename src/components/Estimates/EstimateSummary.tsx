@@ -1,16 +1,16 @@
 
-import { FormField, FormItem, FormControl } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
+import { ReactNode } from "react";
 
 interface EstimateSummaryProps {
   form: UseFormReturn<any>;
   subtotal: number;
   taxAmount: number;
   total: number;
+  taxRateField?: ReactNode;
 }
 
-export function EstimateSummary({ form, subtotal, taxAmount, total }: EstimateSummaryProps) {
+export function EstimateSummary({ form, subtotal, taxAmount, total, taxRateField }: EstimateSummaryProps) {
   return (
     <div className="space-y-4">
       <h3 className="font-medium">Summary</h3>
@@ -25,23 +25,7 @@ export function EstimateSummary({ form, subtotal, taxAmount, total }: EstimateSu
             <div className="flex items-center gap-2">
               <span>Tax</span>
               <div className="w-20">
-                <FormField
-                  control={form.control}
-                  name="taxRate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                          min={0}
-                          max={100}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                {taxRateField}
               </div>
               <span>%</span>
             </div>
