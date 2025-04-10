@@ -55,13 +55,23 @@ export const mapDbEstimateItemToModel = (dbItem: DbEstimateItem): EstimateItem =
  * Maps a frontend new estimate to a database new estimate entity
  */
 export const mapNewEstimateToDb = (estimate: NewEstimate, estimateId: string, userId: string): DbNewEstimate => {
+  // Convert date to string format expected by database
+  const dateString = estimate.date instanceof Date 
+    ? estimate.date.toISOString().split('T')[0] 
+    : typeof estimate.date === 'string' ? estimate.date : '';
+    
+  // Convert expiration date to string format expected by database
+  const expirationDateString = estimate.expirationDate instanceof Date 
+    ? estimate.expirationDate.toISOString().split('T')[0] 
+    : typeof estimate.expirationDate === 'string' ? estimate.expirationDate : '';
+  
   return {
     id: estimateId,
     client_id: estimate.clientId,
     client_name: estimate.clientName,
     status: 'draft',
-    date: estimate.date instanceof Date ? estimate.date.toISOString().split('T')[0] : estimate.date.toString(),
-    expiration_date: estimate.expirationDate instanceof Date ? estimate.expirationDate.toISOString().split('T')[0] : estimate.expirationDate.toString(),
+    date: dateString,
+    expiration_date: expirationDateString,
     subtotal: estimate.subtotal,
     tax_rate: estimate.taxRate,
     tax_amount: estimate.taxAmount,
@@ -97,22 +107,25 @@ export const mapEstimateUpdateToDb = (estimate: Partial<Estimate>): Partial<DbEs
   if (estimate.clientId) dbEstimate.client_id = estimate.clientId;
   if (estimate.clientName) dbEstimate.client_name = estimate.clientName;
   if (estimate.status) dbEstimate.status = estimate.status;
+  
+  // Handle date conversion
   if (estimate.date) {
-    // Convert Date to ISO string for database
     if (estimate.date instanceof Date) {
       dbEstimate.date = estimate.date.toISOString().split('T')[0];
-    } else {
-      dbEstimate.date = estimate.date.toString();
+    } else if (typeof estimate.date === 'string') {
+      dbEstimate.date = estimate.date;
     }
   }
+  
+  // Handle expiration date conversion
   if (estimate.expirationDate) {
-    // Convert Date to ISO string for database
     if (estimate.expirationDate instanceof Date) {
       dbEstimate.expiration_date = estimate.expirationDate.toISOString().split('T')[0];
-    } else {
-      dbEstimate.expiration_date = estimate.expirationDate.toString();
+    } else if (typeof estimate.expirationDate === 'string') {
+      dbEstimate.expiration_date = estimate.expirationDate;
     }
   }
+  
   if (estimate.subtotal !== undefined) dbEstimate.subtotal = estimate.subtotal;
   if (estimate.taxRate !== undefined) dbEstimate.tax_rate = estimate.taxRate;
   if (estimate.taxAmount !== undefined) dbEstimate.tax_amount = estimate.taxAmount;

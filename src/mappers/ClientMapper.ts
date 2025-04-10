@@ -37,11 +37,29 @@ export const mapNewClientToDb = (client: NewClient): DbNewClient => {
  * Maps a frontend client model to a database update client entity
  */
 export const mapClientUpdateToDb = (client: Partial<Client>): Partial<DbClient> => {
-  const dbClient: Partial<DbClient> = { ...client };
+  const dbClient: Partial<DbClient> = {};
   
-  // Remove fields that shouldn't be sent to the database
-  delete (dbClient as any).createdAt;
-  delete (dbClient as any).updatedAt;
+  // Only map properties that exist on DbClient
+  if (client.id !== undefined) dbClient.id = client.id;
+  if (client.name !== undefined) dbClient.name = client.name;
+  if (client.email !== undefined) dbClient.email = client.email;
+  if (client.phone !== undefined) dbClient.phone = client.phone;
+  if (client.address !== undefined) dbClient.address = client.address;
+  if (client.notes !== undefined) dbClient.notes = client.notes || null;
+  if (client.user_id !== undefined) dbClient.user_id = client.user_id;
+  
+  // Convert Date objects to strings if they exist
+  if (client.created_at instanceof Date) {
+    dbClient.created_at = client.created_at.toISOString();
+  } else if (typeof client.created_at === 'string') {
+    dbClient.created_at = client.created_at;
+  }
+  
+  if (client.updated_at instanceof Date) {
+    dbClient.updated_at = client.updated_at.toISOString();
+  } else if (typeof client.updated_at === 'string') {
+    dbClient.updated_at = client.updated_at;
+  }
   
   return dbClient;
 };
