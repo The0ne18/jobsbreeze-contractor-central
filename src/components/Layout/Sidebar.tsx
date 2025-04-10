@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -91,7 +92,7 @@ export default function Sidebar() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-jobs-blue-dark p-4 text-white transition-transform md:static md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-slate-900 p-4 text-white transition-transform md:static md:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
