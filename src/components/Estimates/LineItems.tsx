@@ -10,7 +10,7 @@ interface LineItemsProps {
   onAddItem: () => void;
   onUpdateItem: (id: string, field: keyof EstimateItem, value: any) => void;
   onRemoveItem: (id: string) => void;
-  onAddItemFromCatalog?: (item: EstimateItem) => void; // Make this prop optional
+  onAddItemFromCatalog?: (item: EstimateItem) => void; // Optional prop
 }
 
 export function LineItems({ 
@@ -20,23 +20,22 @@ export function LineItems({
   onRemoveItem, 
   onAddItemFromCatalog 
 }: LineItemsProps) {
-  // Create a handler that uses the provided function or falls back to adding a blank item
+  
+  // Handle item selection from the catalog
   const handleItemSelected = (item: EstimateItem) => {
-    console.log("LineItems - item selected:", item);
+    console.log("LineItems - item selected from catalog:", item);
+    
+    // Validate the item to make sure it has the required properties
+    if (!item || !item.id || !item.description) {
+      console.error("LineItems - Invalid item received:", item);
+      return;
+    }
     
     if (onAddItemFromCatalog) {
-      console.log("LineItems - using onAddItemFromCatalog");
-      
-      // Make sure the item has all required properties
-      if (!item || !item.id || !item.description) {
-        console.error("LineItems - invalid item received:", item);
-        return;
-      }
-      
+      console.log("LineItems - Using onAddItemFromCatalog callback");
       onAddItemFromCatalog(item);
     } else {
-      console.log("LineItems - fallback to onAddItem");
-      // Fallback to using the regular add item if no catalog function provided
+      console.log("LineItems - No onAddItemFromCatalog provided, using onAddItem fallback");
       onAddItem();
     }
   };
