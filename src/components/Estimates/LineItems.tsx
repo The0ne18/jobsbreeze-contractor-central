@@ -3,15 +3,17 @@ import { EstimateItem } from "@/models/Estimate";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { LineItemRow } from "./LineItemRow";
+import { ItemSelector } from "@/components/Items/ItemSelector";
 
 interface LineItemsProps {
   items: EstimateItem[];
   onAddItem: () => void;
   onUpdateItem: (id: string, field: keyof EstimateItem, value: any) => void;
   onRemoveItem: (id: string) => void;
+  onAddItemFromCatalog: (item: EstimateItem) => void;
 }
 
-export function LineItems({ items, onAddItem, onUpdateItem, onRemoveItem }: LineItemsProps) {
+export function LineItems({ items, onAddItem, onUpdateItem, onRemoveItem, onAddItemFromCatalog }: LineItemsProps) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -23,8 +25,11 @@ export function LineItems({ items, onAddItem, onUpdateItem, onRemoveItem }: Line
       </div>
       
       {items.length === 0 ? (
-        <div className="text-center py-4 text-muted-foreground">
-          No items added. Click "Add Item" to add your first item.
+        <div className="space-y-4">
+          <div className="text-center py-4 text-muted-foreground">
+            No items added. Add a blank item or select from your catalog.
+          </div>
+          <ItemSelector onItemSelected={onAddItemFromCatalog} />
         </div>
       ) : (
         <div className="space-y-4">
@@ -47,6 +52,11 @@ export function LineItems({ items, onAddItem, onUpdateItem, onRemoveItem }: Line
               onRemove={onRemoveItem} 
             />
           ))}
+          
+          {/* Add item from catalog */}
+          <div className="pt-2">
+            <ItemSelector onItemSelected={onAddItemFromCatalog} />
+          </div>
         </div>
       )}
     </div>

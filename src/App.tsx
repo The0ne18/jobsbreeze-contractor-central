@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import Estimates from "./pages/Estimates";
 import Invoices from "./pages/Invoices";
+import Items from "./pages/Items";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -32,6 +33,8 @@ const App = () => (
             <Route path="/estimates/new" element={<ProtectedRoute><Estimates /></ProtectedRoute>} />
             <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
             <Route path="/invoices/new" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
+            <Route path="/items" element={<ProtectedRoute><Items /></ProtectedRoute>} />
+            <Route path="/items/new" element={<ProtectedRoute><Items /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />

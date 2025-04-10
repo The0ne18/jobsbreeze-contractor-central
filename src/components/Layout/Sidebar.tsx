@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   LogOut,
+  Package,
 } from "lucide-react";
 
 const navItems = [
@@ -37,6 +38,11 @@ const navItems = [
     title: "Invoices",
     href: "/invoices",
     icon: Receipt,
+  },
+  {
+    title: "Items",
+    href: "/items",
+    icon: Package,
   },
   {
     title: "Settings",
