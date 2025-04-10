@@ -43,7 +43,7 @@ export default function Estimates() {
     queryKey: ['estimates', queryOptions],
     queryFn: () => getEstimates(queryOptions),
     staleTime: 60000, // Data is fresh for 1 minute
-    keepPreviousData: true // Keep previous data while loading new data
+    placeholderData: { data: [], total: 0 } // Provide placeholder data to avoid type errors
   });
   
   const estimates = data?.data || [];
