@@ -26,6 +26,13 @@ export function LineItems({
     
     if (onAddItemFromCatalog) {
       console.log("LineItems - using onAddItemFromCatalog");
+      
+      // Make sure the item has all required properties
+      if (!item || !item.id || !item.description) {
+        console.error("LineItems - invalid item received:", item);
+        return;
+      }
+      
       onAddItemFromCatalog(item);
     } else {
       console.log("LineItems - fallback to onAddItem");

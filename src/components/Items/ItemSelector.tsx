@@ -38,6 +38,7 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
         setLoading(true);
         try {
           const fetchedItems = await getItems();
+          console.log("ItemSelector - fetched items:", fetchedItems);
           setItems(fetchedItems);
         } catch (error) {
           console.error("Failed to fetch items:", error);
@@ -51,6 +52,8 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
   }, [open, items.length]);
   
   const handleSelectItem = (itemId: string) => {
+    console.log("ItemSelector - handleSelectItem called with id:", itemId);
+    
     // Find the selected item from our items array
     const selectedItem = items.find(item => item.id === itemId);
     
@@ -126,8 +129,14 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
                 <CommandItem
                   key={item.id}
                   value={item.id}
-                  onSelect={handleSelectItem}
-                  onClick={() => handleSelectItem(item.id)} // Added onClick as a backup
+                  onSelect={(value) => {
+                    console.log("CommandItem onSelect called with value:", value);
+                    handleSelectItem(value);
+                  }}
+                  onClick={() => {
+                    console.log("CommandItem onClick called for item:", item.id);
+                    handleSelectItem(item.id);
+                  }}
                   className="cursor-pointer"
                 >
                   <div className="flex flex-col">
