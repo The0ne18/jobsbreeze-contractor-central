@@ -50,23 +50,34 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
     fetchItems();
   }, [open, items.length]);
   
-  const handleSelectItem = (item: Item) => {
+  const handleSelectItem = (itemId: string) => {
+    // Find the selected item from our items array
+    const selectedItem = items.find(item => item.id === itemId);
+    
+    if (!selectedItem) {
+      console.error("Selected item not found:", itemId);
+      return;
+    }
+    
+    console.log("ItemSelector - item found:", selectedItem);
+    
     // Create a proper EstimateItem object from the catalog Item
     const estimateItem: EstimateItem = {
       id: uuidv4(),
-      description: item.name,
+      description: selectedItem.name,
       quantity: 1,
-      rate: item.rate,
-      tax: item.tax,
-      total: item.rate, // Initial total is just the rate × quantity (1)
-      category: item.category as 'labor' | 'materials' | 'other'
+      rate: selectedItem.rate,
+      tax: selectedItem.tax,
+      total: selectedItem.rate, // Initial total is just the rate × quantity (1)
+      category: selectedItem.category as 'labor' | 'materials' | 'other'
     };
     
-    console.log("ItemSelector - selected item:", item);
     console.log("ItemSelector - created estimateItem:", estimateItem);
     
     // Call the callback with the properly formatted EstimateItem
     onItemSelected(estimateItem);
+    
+    // Close the popover
     setOpen(false);
   };
   
@@ -115,7 +126,9 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
                 <CommandItem
                   key={item.id}
                   value={item.id}
-                  onSelect={() => handleSelectItem(item)}
+                  onSelect={handleSelectItem}
+                  onClick={() => handleSelectItem(item.id)} // Added onClick as a backup
+                  className="cursor-pointer"
                 >
                   <div className="flex flex-col">
                     <div className="font-medium">{item.name}</div>

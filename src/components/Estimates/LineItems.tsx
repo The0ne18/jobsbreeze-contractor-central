@@ -23,6 +23,7 @@ export function LineItems({
   // Create a handler that uses the provided function or falls back to adding a blank item
   const handleItemSelected = (item: EstimateItem) => {
     console.log("LineItems - item selected:", item);
+    
     if (onAddItemFromCatalog) {
       console.log("LineItems - using onAddItemFromCatalog");
       onAddItemFromCatalog(item);

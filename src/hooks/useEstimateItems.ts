@@ -29,8 +29,20 @@ export function useEstimateItems(initialTaxRate: number = 0) {
   // Add an item from the catalog
   const addItemFromCatalog = (item: EstimateItem) => {
     console.log("useEstimateItems - adding from catalog:", item);
+    
+    // Ensure we're adding a valid item
+    if (!item || !item.id) {
+      console.error("Invalid item received in addItemFromCatalog:", item);
+      return;
+    }
+    
     // Use functional update pattern to ensure we're working with latest state
-    setItems(prevItems => [...prevItems, item]);
+    setItems(prevItems => {
+      console.log("useEstimateItems - current items:", prevItems);
+      const updatedItems = [...prevItems, item];
+      console.log("useEstimateItems - updated items:", updatedItems);
+      return updatedItems;
+    });
   };
 
   // Remove an item from the estimate
@@ -73,6 +85,7 @@ export function useEstimateItems(initialTaxRate: number = 0) {
 
   // Effect to recalculate totals when items change
   useEffect(() => {
+    console.log("useEstimateItems - items changed, recalculating totals", items);
     updateTotals(items, initialTaxRate);
   }, [items, initialTaxRate]);
 
