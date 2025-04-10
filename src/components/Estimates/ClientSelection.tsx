@@ -33,7 +33,7 @@ export function ClientSelection({ form, clients, loading }: ClientSelectionProps
               <SelectContent>
                 {clients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
-                    {client.name}
+                    {client.name} {/* This is already displaying the client name */}
                   </SelectItem>
                 ))}
               </SelectContent>

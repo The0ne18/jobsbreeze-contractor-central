@@ -1,11 +1,12 @@
 
 import { Estimate, EstimateItem, NewEstimate } from "@/models/Estimate";
 import { v4 as uuidv4 } from "uuid";
+import { generateEstimateNumber } from "@/utils/estimateUtils";
 
 // Mock data store
 let estimates: Estimate[] = [
   {
-    id: "1",
+    id: "JS-20250407-01",
     clientId: "c1",
     clientName: "John Smith",
     status: "draft",
@@ -32,11 +33,14 @@ export const getEstimate = (id: string): Promise<Estimate | undefined> => {
 };
 
 export const createEstimate = (estimate: NewEstimate): Promise<Estimate> => {
+  // Generate a formatted estimate number using client name and existing estimates
+  const estimateNumber = generateEstimateNumber(estimate.clientName, estimates);
+  
   const newEstimate: Estimate = {
-    id: uuidv4(),
+    id: estimateNumber, // Use our formatted estimate number instead of UUID
     status: "draft",
     clientId: estimate.clientId,
-    clientName: estimate.clientName, // Now correctly using the property from NewEstimate
+    clientName: estimate.clientName,
     date: estimate.date,
     expirationDate: estimate.expirationDate,
     items: estimate.items,
