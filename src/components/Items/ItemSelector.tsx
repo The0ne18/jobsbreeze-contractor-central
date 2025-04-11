@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Plus, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { Item } from "@/models/Item";
 import { EstimateItem } from "@/models/Estimate";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
+import { toast } from "sonner";
 
 interface ItemSelectorProps {
   onItemSelected: (item: EstimateItem) => void;
@@ -42,6 +44,7 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
           setItems(fetchedItems);
         } catch (error) {
           console.error("Failed to fetch items:", error);
+          toast.error("Failed to load items");
         } finally {
           setLoading(false);
         }
@@ -51,42 +54,49 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
     fetchItems();
   }, [open, items.length]);
   
-  // Improved item selection handler with better error handling
-  const handleItemSelection = (itemId: string) => {
-    console.log("ItemSelector - handleItemSelection called with ID:", itemId);
+  // Single-point transformation from catalog Item to EstimateItem
+  const createEstimateItemFromCatalogItem = (catalogItem: Item): EstimateItem => {
+    console.log("ItemSelector - Creating EstimateItem from:", catalogItem);
     
-    // Find the selected item from our items array
+    const estimateItem: EstimateItem = {
+      id: uuidv4(),
+      description: catalogItem.name,
+      quantity: 1,
+      rate: catalogItem.rate || 0,
+      tax: catalogItem.tax || false,
+      total: catalogItem.rate || 0,
+      category: catalogItem.category as 'labor' | 'materials' | 'other'
+    };
+    
+    console.log("ItemSelector - Created EstimateItem:", estimateItem);
+    return estimateItem;
+  };
+
+  // Simplified selection handler that completes the entire process
+  const handleSelectItem = (itemId: string) => {
+    console.log("ItemSelector - handleSelectItem called with ID:", itemId);
+    
+    // Find the selected item
     const selectedItem = items.find(item => item.id === itemId);
     
     if (!selectedItem) {
       console.error("ItemSelector - Selected item not found:", itemId);
+      toast.error("Item not found");
       return;
     }
     
-    console.log("ItemSelector - Found selected item:", selectedItem);
+    // Transform to EstimateItem
+    const estimateItem = createEstimateItemFromCatalogItem(selectedItem);
     
-    // Create a properly formatted EstimateItem from the catalog Item
-    const estimateItem: EstimateItem = {
-      id: uuidv4(), // Generate a new ID for the estimate item
-      description: selectedItem.name,
-      quantity: 1,
-      rate: selectedItem.rate || 0,
-      tax: selectedItem.tax || false,
-      total: selectedItem.rate || 0, // Initial total is rate × quantity (1)
-      category: selectedItem.category as 'labor' | 'materials' | 'other'
-    };
-    
-    console.log("ItemSelector - Created estimateItem:", estimateItem);
-    
+    // Call the parent callback
     try {
-      // Call the parent callback with the formatted item
+      console.log("ItemSelector - Passing estimateItem to parent callback:", estimateItem);
       onItemSelected(estimateItem);
-      console.log("ItemSelector - onItemSelected callback executed");
-      
-      // Close the popover after successfully adding the item
+      // Close the popover on success
       setOpen(false);
     } catch (error) {
       console.error("ItemSelector - Error in onItemSelected callback:", error);
+      toast.error("Failed to add item");
     }
   };
   
@@ -135,10 +145,7 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
                 <CommandItem
                   key={item.id}
                   value={item.id}
-                  onSelect={(value) => {
-                    console.log("ItemSelector - CommandItem onSelect called with:", value);
-                    handleItemSelection(value);
-                  }}
+                  onSelect={handleSelectItem}
                   className="cursor-pointer"
                 >
                   <div className="flex flex-col">

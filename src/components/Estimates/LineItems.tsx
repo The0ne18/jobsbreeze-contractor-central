@@ -23,11 +23,13 @@ export function LineItems({
 }: LineItemsProps) {
 
   // Log component rendering and props
-  console.log("LineItems rendered with props:", { 
-    itemsCount: items.length, 
-    hasAddItemFromCatalog: !!onAddItemFromCatalog,
-    items: items 
-  });
+  useEffect(() => {
+    console.log("LineItems - Component mounted with props:", { 
+      itemsCount: items.length, 
+      hasAddItemFromCatalog: !!onAddItemFromCatalog,
+      items: items 
+    });
+  }, []);
 
   // Log items whenever they change
   useEffect(() => {
@@ -35,44 +37,17 @@ export function LineItems({
   }, [items]);
   
   // Handler for when an item is selected from the catalog
-  const handleItemSelected = (item: EstimateItem) => {
-    console.log("LineItems - handleItemSelected called with item:", item);
+  const handleItemSelected = (estimateItem: EstimateItem) => {
+    console.log("LineItems - handleItemSelected received item:", estimateItem);
     
-    // Check for required properties
-    if (!item || !item.id || !item.description) {
-      console.error("LineItems - Invalid item received:", item);
+    if (!onAddItemFromCatalog) {
+      console.error("LineItems - onAddItemFromCatalog callback not provided");
       return;
     }
     
-    // Ensure quantity is valid
-    if (!item.quantity || item.quantity <= 0) {
-      console.log("LineItems - Fixing invalid quantity:", item.quantity);
-      item.quantity = 1;
-    }
-    
-    // Ensure rate is valid
-    if (typeof item.rate !== 'number') {
-      console.log("LineItems - Fixing invalid rate:", item.rate);
-      item.rate = 0;
-    }
-    
-    // Calculate total correctly
-    const calculatedTotal = item.quantity * item.rate;
-    if (item.total !== calculatedTotal) {
-      console.log(`LineItems - Fixing item total: ${item.total} -> ${calculatedTotal}`);
-      item.total = calculatedTotal;
-    }
-    
-    console.log("LineItems - Final validated item:", item);
-    
-    // Use the specific callback if provided, or fall back to generic add
-    if (onAddItemFromCatalog) {
-      console.log("LineItems - Using onAddItemFromCatalog callback");
-      onAddItemFromCatalog(item);
-    } else {
-      console.log("LineItems - No onAddItemFromCatalog provided, using onAddItem fallback");
-      onAddItem();
-    }
+    // Pass the validated item directly to the parent
+    console.log("LineItems - Calling onAddItemFromCatalog with:", estimateItem);
+    onAddItemFromCatalog(estimateItem);
   };
 
   return (

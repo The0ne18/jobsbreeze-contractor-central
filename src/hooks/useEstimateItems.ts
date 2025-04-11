@@ -3,9 +3,11 @@ import { useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { EstimateItem } from "@/models/Estimate";
 import { calculateEstimateTotals } from "@/services/estimateService";
+import { toast } from "sonner";
 
 export function useEstimateItems(initialTaxRate: number = 0) {
   const [items, setItems] = useState<EstimateItem[]>([]);
+  const [taxRate, setTaxRate] = useState(initialTaxRate);
   const [totals, setTotals] = useState({
     subtotal: 0,
     taxAmount: 0,
@@ -26,48 +28,47 @@ export function useEstimateItems(initialTaxRate: number = 0) {
     console.log("useEstimateItems - adding new blank item:", newItem);
     
     setItems(prevItems => {
-      console.log("useEstimateItems - previous items:", prevItems);
       const updatedItems = [...prevItems, newItem];
-      console.log("useEstimateItems - updated items after adding blank:", updatedItems);
+      console.log("useEstimateItems - items after adding blank:", updatedItems);
       return updatedItems;
     });
   }, []);
 
-  // Add an item from the catalog
-  const addItemFromCatalog = useCallback((item: EstimateItem) => {
-    console.log("useEstimateItems - addItemFromCatalog called with:", item);
+  // Add a pre-built item from the catalog
+  const addItemFromCatalog = useCallback((newItem: EstimateItem) => {
+    console.log("useEstimateItems - addItemFromCatalog called with:", newItem);
     
-    // Validate incoming item
-    if (!item || typeof item !== 'object') {
-      console.error("useEstimateItems - Invalid item received:", item);
+    // Validate the item has all required fields
+    if (!newItem || !newItem.id || !newItem.description) {
+      console.error("useEstimateItems - Invalid item format:", newItem);
+      toast.error("Invalid item format");
       return;
     }
     
-    // Ensure the item has an ID (if not, generate one)
-    if (!item.id) {
-      item.id = uuidv4();
+    // Ensure essential numeric values are valid
+    if (typeof newItem.quantity !== 'number' || newItem.quantity <= 0) {
+      console.warn("useEstimateItems - Fixing invalid quantity:", newItem.quantity);
+      newItem.quantity = 1;
     }
     
-    // Create a validated copy to avoid mutation issues
-    const validatedItem: EstimateItem = {
-      id: item.id,
-      description: item.description || "",
-      quantity: typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1,
-      rate: typeof item.rate === 'number' ? item.rate : 0,
-      tax: !!item.tax,
-      total: typeof item.quantity === 'number' && typeof item.rate === 'number' 
-             ? item.quantity * item.rate 
-             : 0,
-      category: item.category || "labor",
-    };
+    if (typeof newItem.rate !== 'number') {
+      console.warn("useEstimateItems - Fixing invalid rate:", newItem.rate);
+      newItem.rate = 0;
+    }
     
-    console.log("useEstimateItems - validated catalog item:", validatedItem);
+    // Recalculate the total to ensure consistency
+    const calculatedTotal = newItem.quantity * newItem.rate;
+    if (newItem.total !== calculatedTotal) {
+      console.warn(`useEstimateItems - Fixing item total: ${newItem.total} → ${calculatedTotal}`);
+      newItem.total = calculatedTotal;
+    }
     
-    // Use functional update to work with latest state
+    console.log("useEstimateItems - Validated catalog item:", newItem);
+    
+    // Use functional update to avoid stale state issues
     setItems(prevItems => {
-      console.log("useEstimateItems - previous items:", prevItems);
-      const updatedItems = [...prevItems, validatedItem];
-      console.log("useEstimateItems - updated items after adding catalog item:", updatedItems);
+      const updatedItems = [...prevItems, newItem];
+      console.log("useEstimateItems - items after adding catalog item:", updatedItems);
       return updatedItems;
     });
   }, []);
@@ -107,27 +108,37 @@ export function useEstimateItems(initialTaxRate: number = 0) {
   }, []);
 
   // Update totals based on current items and tax rate
-  const updateTotals = useCallback((currentItems: EstimateItem[], taxRate: number) => {
-    console.log("useEstimateItems - updating totals with taxRate:", taxRate);
-    console.log("useEstimateItems - items for total calculation:", currentItems);
+  const updateTotals = useCallback((currentItems: EstimateItem[], currentTaxRate: number) => {
+    console.log("useEstimateItems - updating totals with:", {
+      itemsCount: currentItems.length,
+      taxRate: currentTaxRate
+    });
     
-    const { subtotal, taxAmount, total } = calculateEstimateTotals(currentItems, taxRate);
+    const { subtotal, taxAmount, total } = calculateEstimateTotals(currentItems, currentTaxRate);
     console.log("useEstimateItems - calculated totals:", { subtotal, taxAmount, total });
     
     setTotals({ subtotal, taxAmount, total });
   }, []);
 
   // Update tax rate
-  const updateTaxRate = useCallback((taxRate: number) => {
-    console.log("useEstimateItems - updateTaxRate called with:", taxRate);
-    updateTotals(items, taxRate);
-  }, [items, updateTotals]);
+  const updateTaxRate = useCallback((newTaxRate: number) => {
+    console.log("useEstimateItems - updateTaxRate called with:", newTaxRate);
+    setTaxRate(newTaxRate);
+  }, []);
 
-  // Effect to recalculate totals when items change
+  // Effect to recalculate totals when items or tax rate change
   useEffect(() => {
-    console.log("useEstimateItems - items changed, recalculating totals:", items);
-    updateTotals(items, initialTaxRate);
-  }, [items, initialTaxRate, updateTotals]);
+    console.log("useEstimateItems - calculating totals due to items/taxRate change");
+    updateTotals(items, taxRate);
+  }, [items, taxRate, updateTotals]);
+
+  // Effect to sync initial tax rate
+  useEffect(() => {
+    if (initialTaxRate !== taxRate) {
+      console.log(`useEstimateItems - Syncing tax rate: ${taxRate} → ${initialTaxRate}`);
+      setTaxRate(initialTaxRate);
+    }
+  }, [initialTaxRate]);
 
   return {
     items,
