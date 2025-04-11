@@ -67,6 +67,17 @@ export default function EstimateForm({ estimate, onSubmit, onCancel }: EstimateF
     addItemFromCatalog
   } = useEstimateItems(form.getValues().taxRate);
 
+  // Add debug logging
+  useEffect(() => {
+    console.log("EstimateForm - Current items:", items);
+  }, [items]);
+
+  // Debug logging for addItemFromCatalog
+  const handleAddItemFromCatalog = (item) => {
+    console.log("EstimateForm - handleAddItemFromCatalog called with:", item);
+    addItemFromCatalog(item);
+  };
+
   useEffect(() => {
     const fetchClients = async () => {
       try {
@@ -138,7 +149,7 @@ export default function EstimateForm({ estimate, onSubmit, onCancel }: EstimateF
             onAddItem={addItem} 
             onUpdateItem={updateItem} 
             onRemoveItem={removeItem}
-            onAddItemFromCatalog={addItemFromCatalog}
+            onAddItemFromCatalog={handleAddItemFromCatalog}
           />
           <EstimateSummary 
             form={form} 
