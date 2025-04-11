@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { LineItemRow } from "./LineItemRow";
 import { ItemSelector } from "@/components/Items/ItemSelector";
-
+import { useEffect } from "react";
 
 interface LineItemsProps {
   items: EstimateItem[];
   onAddItem: () => void;
   onUpdateItem: (id: string, field: keyof EstimateItem, value: any) => void;
   onRemoveItem: (id: string) => void;
-  onAddItemFromCatalog?: (item: EstimateItem) => void; // Optional prop
+  onAddItemFromCatalog?: (item: EstimateItem) => void;
 }
   
 export function LineItems({ 
@@ -22,30 +22,50 @@ export function LineItems({
   onAddItemFromCatalog 
 }: LineItemsProps) {
 
-    // Add this line right here, inside the function
+  // Log component rendering and props
   console.log("LineItems rendered with props:", { 
     itemsCount: items.length, 
-    hasAddItemFromCatalog: !!onAddItemFromCatalog 
+    hasAddItemFromCatalog: !!onAddItemFromCatalog,
+    items: items 
   });
+
+  // Log items whenever they change
+  useEffect(() => {
+    console.log("LineItems - items updated:", items);
+  }, [items]);
   
-  // Handle item selection from the catalog
+  // Handler for when an item is selected from the catalog
   const handleItemSelected = (item: EstimateItem) => {
-    console.log("LineItems - item selected from catalog:", item);
+    console.log("LineItems - handleItemSelected called with item:", item);
     
-    // Validate the item to make sure it has the required properties
+    // Check for required properties
     if (!item || !item.id || !item.description) {
       console.error("LineItems - Invalid item received:", item);
       return;
     }
     
-    // Double check that the total is calculated correctly
+    // Ensure quantity is valid
+    if (!item.quantity || item.quantity <= 0) {
+      console.log("LineItems - Fixing invalid quantity:", item.quantity);
+      item.quantity = 1;
+    }
+    
+    // Ensure rate is valid
+    if (typeof item.rate !== 'number') {
+      console.log("LineItems - Fixing invalid rate:", item.rate);
+      item.rate = 0;
+    }
+    
+    // Calculate total correctly
     const calculatedTotal = item.quantity * item.rate;
     if (item.total !== calculatedTotal) {
       console.log(`LineItems - Fixing item total: ${item.total} -> ${calculatedTotal}`);
       item.total = calculatedTotal;
     }
     
-    // Use the specific callback if provided, otherwise fallback to generic add
+    console.log("LineItems - Final validated item:", item);
+    
+    // Use the specific callback if provided, or fall back to generic add
     if (onAddItemFromCatalog) {
       console.log("LineItems - Using onAddItemFromCatalog callback");
       onAddItemFromCatalog(item);

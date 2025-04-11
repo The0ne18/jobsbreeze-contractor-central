@@ -31,13 +31,15 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   
+  // Load items when the popover is opened
   useEffect(() => {
     const fetchItems = async () => {
       if (open && items.length === 0) {
+        console.log("ItemSelector - Fetching items");
         setLoading(true);
         try {
           const fetchedItems = await getItems();
-          console.log("ItemSelector - fetched items:", fetchedItems);
+          console.log("ItemSelector - Fetched items:", fetchedItems);
           setItems(fetchedItems);
         } catch (error) {
           console.error("Failed to fetch items:", error);
@@ -50,6 +52,7 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
     fetchItems();
   }, [open, items.length]);
   
+  // Simplified item selection handler
   const handleItemSelection = (itemId: string) => {
     console.log("ItemSelector - handleItemSelection called with ID:", itemId);
     
@@ -63,24 +66,26 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
     
     console.log("ItemSelector - Found selected item:", selectedItem);
     
-    // Create a proper EstimateItem object from the catalog Item
+    // Create a properly formatted EstimateItem from the catalog Item
     const estimateItem: EstimateItem = {
-      id: uuidv4(),
+      id: uuidv4(), // Generate a new ID for the estimate item
       description: selectedItem.name,
       quantity: 1,
       rate: selectedItem.rate || 0,
       tax: selectedItem.tax || false,
-      total: selectedItem.rate || 0, // Initial total is just the rate × quantity (1)
+      total: selectedItem.rate || 0, // Initial total is rate × quantity (1)
       category: selectedItem.category as 'labor' | 'materials' | 'other'
     };
     
-    console.log("ItemSelector - Created estimateItem to pass to parent:", estimateItem);
+    console.log("ItemSelector - Created estimateItem:", estimateItem);
     
-    // Call the callback with the properly formatted EstimateItem
+    // Call the parent callback with the formatted item
     onItemSelected(estimateItem);
     
-    // Close the popover after selection
-    setOpen(false);
+    // Delay closing the popover to ensure the item is processed
+    setTimeout(() => {
+      setOpen(false);
+    }, 100);
   };
   
   const handleCreateNewItem = () => {
@@ -128,10 +133,7 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
                 <CommandItem
                   key={item.id}
                   value={item.id}
-                  onSelect={(currentValue) => {
-                    console.log("ItemSelector - onSelect called with value:", currentValue);
-                    handleItemSelection(currentValue);
-                  }}
+                  onSelect={handleItemSelection}
                   className="cursor-pointer"
                 >
                   <div className="flex flex-col">

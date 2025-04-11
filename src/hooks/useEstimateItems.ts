@@ -35,7 +35,7 @@ export function useEstimateItems(initialTaxRate: number = 0) {
 
   // Add an item from the catalog
   const addItemFromCatalog = useCallback((item: EstimateItem) => {
-    console.log("useEstimateItems - adding from catalog:", item);
+    console.log("useEstimateItems - addItemFromCatalog called with:", item);
     
     // Validate incoming item
     if (!item || typeof item !== 'object') {
@@ -43,28 +43,27 @@ export function useEstimateItems(initialTaxRate: number = 0) {
       return;
     }
     
-    // Ensure the item has required properties
-    if (!item.id || !item.description) {
-      console.error("useEstimateItems - Missing required properties:", item);
-      return;
+    // Ensure the item has an ID (if not, generate one)
+    if (!item.id) {
+      item.id = uuidv4();
     }
     
-    // Ensure numeric values are valid
-    const quantity = typeof item.quantity === 'number' ? item.quantity : 1;
-    const rate = typeof item.rate === 'number' ? item.rate : 0;
-    
-    // Create a new item with validated properties and proper total calculation
+    // Create a validated copy to avoid mutation issues
     const validatedItem: EstimateItem = {
-      ...item,
-      quantity: quantity,
-      rate: rate,
-      total: quantity * rate,
-      id: item.id || uuidv4()
+      id: item.id,
+      description: item.description || "",
+      quantity: typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1,
+      rate: typeof item.rate === 'number' ? item.rate : 0,
+      tax: !!item.tax,
+      total: typeof item.quantity === 'number' && typeof item.rate === 'number' 
+             ? item.quantity * item.rate 
+             : 0,
+      category: item.category || "labor",
     };
     
     console.log("useEstimateItems - validated catalog item:", validatedItem);
     
-    // Use functional update to ensure we're working with latest state
+    // Use functional update to work with latest state
     setItems(prevItems => {
       console.log("useEstimateItems - previous items:", prevItems);
       const updatedItems = [...prevItems, validatedItem];
