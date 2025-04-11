@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Plus, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,7 +51,7 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
     fetchItems();
   }, [open, items.length]);
   
-  // Simplified item selection handler
+  // Improved item selection handler with better error handling
   const handleItemSelection = (itemId: string) => {
     console.log("ItemSelector - handleItemSelection called with ID:", itemId);
     
@@ -79,13 +78,16 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
     
     console.log("ItemSelector - Created estimateItem:", estimateItem);
     
-    // Call the parent callback with the formatted item
-    onItemSelected(estimateItem);
-    
-    // Delay closing the popover to ensure the item is processed
-    setTimeout(() => {
+    try {
+      // Call the parent callback with the formatted item
+      onItemSelected(estimateItem);
+      console.log("ItemSelector - onItemSelected callback executed");
+      
+      // Close the popover after successfully adding the item
       setOpen(false);
-    }, 100);
+    } catch (error) {
+      console.error("ItemSelector - Error in onItemSelected callback:", error);
+    }
   };
   
   const handleCreateNewItem = () => {
@@ -133,7 +135,10 @@ export function ItemSelector({ onItemSelected }: ItemSelectorProps) {
                 <CommandItem
                   key={item.id}
                   value={item.id}
-                  onSelect={handleItemSelection}
+                  onSelect={(value) => {
+                    console.log("ItemSelector - CommandItem onSelect called with:", value);
+                    handleItemSelection(value);
+                  }}
                   className="cursor-pointer"
                 >
                   <div className="flex flex-col">
