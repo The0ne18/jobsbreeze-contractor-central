@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -88,6 +87,37 @@ export default function EstimateForm({ estimate, onSubmit, onCancel }: EstimateF
     return () => subscription.unsubscribe();
   }, [form]);
 
+  // Debug logging for items state
+  useEffect(() => {
+    console.log("EstimateForm - items state changed:", items);
+  }, [items]);
+
+  // Form submission handler
+  const handleSubmit = (values: FormValues) => {
+    console.log("EstimateForm - Form submitted with values:", values);
+    console.log("EstimateForm - Current items:", items);
+    
+    const { clientId, date, expirationDate, taxRate, notes, terms } = values;
+    const clientName = clients.find(c => c.id === clientId)?.name || '';
+    
+    const estimateData: NewEstimate = {
+      clientId,
+      clientName,
+      date,
+      expirationDate,
+      items,
+      subtotal: totals.subtotal,
+      taxRate,
+      taxAmount: totals.taxAmount,
+      total: totals.total,
+      notes: notes || "",
+      terms: terms || "",
+    };
+    
+    console.log("EstimateForm - Submitting estimate data:", estimateData);
+    onSubmit(estimateData);
+  };
+
   // Handle adding item from catalog with improved error handling
   const handleAddItemFromCatalog = (item: EstimateItem) => {
     console.log("EstimateForm - handleAddItemFromCatalog called with:", item);
@@ -144,32 +174,6 @@ export default function EstimateForm({ estimate, onSubmit, onCancel }: EstimateF
       console.log("EstimateForm - Form initialized with estimate data");
     }
   }, [estimate, form, setItems, updateTaxRate]);
-
-  // Form submission handler
-  const handleSubmit = (values: FormValues) => {
-    console.log("EstimateForm - Form submitted with values:", values);
-    console.log("EstimateForm - Current items:", items);
-    
-    const { clientId, date, expirationDate, taxRate, notes, terms } = values;
-    const clientName = clients.find(c => c.id === clientId)?.name || '';
-    
-    const estimateData: NewEstimate = {
-      clientId,
-      clientName,
-      date,
-      expirationDate,
-      items,
-      subtotal: totals.subtotal,
-      taxRate,
-      taxAmount: totals.taxAmount,
-      total: totals.total,
-      notes: notes || "",
-      terms: terms || "",
-    };
-    
-    console.log("EstimateForm - Submitting estimate data:", estimateData);
-    onSubmit(estimateData);
-  };
 
   return (
     <div className="space-y-6">
